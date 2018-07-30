@@ -25,11 +25,12 @@ import "labrpc"
 
 
 
-//
-// as each Raft peer becomes aware that successive log entries are
+// 这个是用来测试用的 在config.go里面的start1()里面有个go func()检查
+// as(尽管) each Raft peer becomes aware that successive log entries are
 // committed, the peer should send an ApplyMsg to the service (or
 // tester) on the same server, via the applyCh passed to Make().
-//
+// 某个节点执行(apply)了一条已经commit的指令
+// 尽管它知道后面还有已经commit但还没执行的指令，但它还需要发送一条AppllyMsg给自己?
 type ApplyMsg struct {
 	Index       int
 	Command     interface{}
@@ -90,9 +91,6 @@ func (rf *Raft) readPersist(data []byte) {
 	// d.Decode(&rf.yyy)
 }
 
-
-
-
 //
 // example RequestVote RPC arguments structure.
 //
@@ -146,7 +144,7 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 // may fail or lose an election.
 //
 // the first return value is the index that the command will appear at
-// if it's ever committed. the second return value is the current
+// if it's ever(可能?) committed. the second return value is the current
 // term. the third return value is true if this server believes it is
 // the leader.
 //
@@ -188,6 +186,11 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here.
+
+
+
+
+
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())

@@ -72,7 +72,7 @@ type replyMsg struct {
 
 type ClientEnd struct {
 	endname interface{} // this end-point's name 客户端的名称
-	ch      chan reqMsg // copy of Network.endCh 应该是客户端用来向服务器 发送请求消息的go channel
+	ch      chan reqMsg // copy of Network.endCh(也就是说ch和Network.endCh都是放的同样的东西 参考初始化时MakeEnd()函数)   是客户端用来向服务器 发送请求消息的go channel
 }
 
 // send an RPC, wait for the reply.
@@ -92,9 +92,9 @@ func (e *ClientEnd) Call(svcMeth string, args interface{}, reply interface{}) bo
 	qe.Encode(args)
 	req.args = qb.Bytes()
 
-	e.ch <- req //把请求放到 客户端的发送channel里面
+	e.ch <- req //把请求放到 客户端的发送channel里面。在初始化时, MakeNetwork的时候, 对每个 服务器都会有一个goroutine来处理接收到的请求(processReq())
 
-	rep := <-req.replyCh //从replyCh里面接收服务器的回复
+	rep := <-req.replyCh //应该是一直等待，知道能 从replyCh里面接收服务器的回复
 	if rep.ok {
 		rb := bytes.NewBuffer(rep.reply) //把从服务器接收到的回复decode一下
 		rd := gob.NewDecoder(rb)
@@ -117,7 +117,7 @@ type Network struct
 	enabled        map[interface{}]bool        // by end name
 	servers        map[interface{}]*Server     // servers, by name
 	connections    map[interface{}]interface{} // endname -> servername
-	endCh          chan reqMsg
+	endCh          chan reqMsg				   // 实际上 某个 客户端往自己的 ClientEnd.ch里面放东西，会直接添加到这个全局的 channel里面。因为 ClientEnd.ch就是 Network.endCh的一个copy。参考初始化时MakeEnd()函数
 }
 
 //Network开一个goroutine来监听到来的请求，对每一个请求，开一个goroutine来处理请求
@@ -211,7 +211,7 @@ func (rn *Network) ProcessReq(req reqMsg) {
 		// if the server has been killed and the RPC should get a
 		// failure reply.
 		ech := make(chan replyMsg)
-		go func() { //多开一个goroutine,估计是为了立刻返回，然后在主的routine里不断地检查服务器是否宕机(224行那里)
+		go func() { //多开一个goroutine 来给指定的服务器发送请求， 然后在主的routine里不断地检查服务器是否宕机(224行那里)
 			r := server.dispatch(req)
 			ech <- r
 		}()

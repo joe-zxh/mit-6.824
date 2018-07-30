@@ -130,7 +130,7 @@ func (cfg *config) start1(i int) {
 
 	// a fresh set of ClientEnds.
 	ends := make([]*labrpc.ClientEnd, cfg.n)
-	for j := 0; j < cfg.n; j++ {
+	for j := 0; j < cfg.n; j++ { //这个循环好像可以和上面那个合并在一起吧???
 		ends[j] = cfg.net.MakeEnd(cfg.endnames[i][j])
 		cfg.net.Connect(cfg.endnames[i][j], j) //节点j是服务端，i是客户端
 	}
@@ -158,7 +158,7 @@ func (cfg *config) start1(i int) {
 				// ignore the snapshot
 			} else if v, ok := (m.Command).(int); ok {
 				cfg.mu.Lock()
-				for j := 0; j < len(cfg.logs); j++ {
+				for j := 0; j < len(cfg.logs); j++ { //遍历所有服务器的日志
 					if old, oldok := cfg.logs[j][m.Index]; oldok && old != v { //cfg.logs[j][m.Index]出来的是第j个节点的第m.Index条指令(指令是int类型的)
 						// some server has already committed a different value for this entry! 同一个index的指令被commit了2次。
 						err_msg = fmt.Sprintf("commit index=%v server=%v %v != server=%v %v",
@@ -207,7 +207,7 @@ func (cfg *config) cleanup() {
 	atomic.StoreInt32(&cfg.done, 1)
 }
 
-// attach server i to the net. 建立一个双向连接，每个节点 既是服务端，又是 客户端
+// attach server i to the net. 建立一个双向连接，每个节点 既是服务端，又是 客户端 enable
 func (cfg *config) connect(i int) {
 	//fmt.Printf("connect(%d)\n", i)
 
@@ -266,7 +266,7 @@ func (cfg *config) setlongreordering(longrel bool) {
 }
 
 // check that there's exactly one leader.
-// try a few times in case re-elections are needed.
+// try a few times in case re-elections are needed. 拿到的是最新任期的leader
 func (cfg *config) checkOneLeader() int {
 	for iters := 0; iters < 10; iters++ {
 		time.Sleep(500 * time.Millisecond)
@@ -384,9 +384,9 @@ func (cfg *config) wait(index int, n int, startTerm int) interface{} {
 	return cmd
 }
 
-// do a complete agreement.
+// do a complete agreement.  现在是要 模拟客户端添加一条日志项：遍历所有的服务器，找到leader，把日志项添加在leader的日志中。
 // it might choose the wrong leader initially,
-// and have to re-submit after giving up.
+// and have to re-submit after giving up. 如果2秒内无法达成一直，那么就会重新提交这条指令。直到10秒后放弃 重新提交。
 // entirely gives up after about 10 seconds.
 // indirectly checks that the servers agree on the
 // same value, since nCommitted() checks this,
@@ -396,8 +396,8 @@ func (cfg *config) one(cmd int, expectedServers int) int {
 	t0 := time.Now()
 	starts := 0
 	for time.Since(t0).Seconds() < 10 {
-		// try all the servers, maybe one is the leader.
-		index := -1
+		// try all the servers, maybe one is the leader. 先遍历 查找当前的leader
+		index := -1 //记录的是leader的内的新的日志项的索引值。 然后根据这个索引值来检查 有多少个节点已经达成一致了。
 		for si := 0; si < cfg.n; si++ {
 			starts = (starts + 1) % cfg.n
 			var rf *Raft
@@ -410,7 +410,7 @@ func (cfg *config) one(cmd int, expectedServers int) int {
 				//cmdBytes := GetBytes(cmd)
 				//sig := signature(cmdBytes)
 				//index1, _, ok := rf.Start(cmd, sig) //ok表示是否为leader
-				index1, _, ok := rf.Start(cmd) //ok表示是否为leader
+				index1, _, ok := rf.Start(cmd) //ok表示是否为leader  Start里面应该会把这个日志项添加在leader的日志中，并且广播出去
 				// fmt.Printf("index1: %d, ok: %v\n", index1, ok)
 				if ok {
 					index = index1
@@ -421,7 +421,7 @@ func (cfg *config) one(cmd int, expectedServers int) int {
 		}
 
 		if index != -1 {
-			// somebody claimed to be the leader and to have
+			// somebody claimed to be the leader and to have: 日志项的索引值不为-1，说明我们 找到了一个leader
 			// submitted our command; wait a while for agreement.
 			t1 := time.Now()
 			for time.Since(t1).Seconds() < 2 {
