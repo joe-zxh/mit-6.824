@@ -19,6 +19,7 @@ import "sync/atomic"
 import "time"
 import "fmt"
 
+//产生一个长度为n的字符串的函数
 func randstring(n int) string {
 	b := make([]byte, 2*n)
 	crand.Read(b)
@@ -32,15 +33,23 @@ type config struct {
 	net       *labrpc.Network
 	n         int
 	done      int32 // tell internal threads to die
-	rafts     []*Raft
-	applyErr  []string // from apply channel readers
+	rafts     []*Raft //保存Raft客户端节点的
+	applyErr  []string // from apply channel readers  应该是commit的时候出现的错误会放在这里，参考函数start1里面的goroutine(第181行)
 	connected []bool   // whether each server is on the net
-	saved     []*Persister
-	endnames  [][]string    // the port file names each sends to
-	logs      []map[int]int // copy of each server's committed entries
+	saved     []*Persister//用来保存节点的状态到文件的
+	endnames  [][]string    // the port file names each sends to  这里好像 服务端 也可以作为 客户端
+	logs      []map[int]int // copy of each server's committed entries 其实感觉这个log不需要维护，直接遍历里面的节点的logs就能拿到
+	// key:index value: 日志项(int)  这是一个map的数组，第i个元素保存的是 第i个节点的log
 }
 
-func make_config(t *testing.T, n int, unreliable bool) *config {
+var ncpu_once sync.Once
+
+func make_config(t *testing.T, n int, unreliable bool) *config {//unreliable可能表示byzant
+	ncpu_once.Do(func() {
+		if runtime.NumCPU() < 2 {
+			fmt.Printf("warning: only one CPU, which may conceal locking bugs\n")
+		}
+	})
 	runtime.GOMAXPROCS(4)
 	cfg := &config{}
 	cfg.t = t
@@ -71,7 +80,7 @@ func make_config(t *testing.T, n int, unreliable bool) *config {
 	return cfg
 }
 
-// shut down a Raft server but save its persistent state.
+// shut down a Raft server but save its persistent state. 模拟crash的时候发生的事情：先保存当前节点的状态，然后再crash
 func (cfg *config) crash1(i int) {
 	cfg.disconnect(i)
 	cfg.net.DeleteServer(i) // disable client connections to the server.
@@ -116,14 +125,14 @@ func (cfg *config) start1(i int) {
 	// so that old crashed instance's ClientEnds can't send.
 	cfg.endnames[i] = make([]string, cfg.n)
 	for j := 0; j < cfg.n; j++ {
-		cfg.endnames[i][j] = randstring(20)
+		cfg.endnames[i][j] = randstring(20) //名字都是随机的
 	}
 
 	// a fresh set of ClientEnds.
 	ends := make([]*labrpc.ClientEnd, cfg.n)
 	for j := 0; j < cfg.n; j++ {
 		ends[j] = cfg.net.MakeEnd(cfg.endnames[i][j])
-		cfg.net.Connect(cfg.endnames[i][j], j)
+		cfg.net.Connect(cfg.endnames[i][j], j) //节点j是服务端，i是客户端
 	}
 
 	cfg.mu.Lock()
@@ -142,7 +151,7 @@ func (cfg *config) start1(i int) {
 
 	// listen to messages from Raft indicating newly committed messages.
 	applyCh := make(chan ApplyMsg)
-	go func() {
+	go func() { //这里是用来 检查 接收到的commit消息 有没有出错的。 但是为什么要开1个goroutine来检查呢??? 能不能放到raft的那边的AppendEntriesCommit()函数里面
 		for m := range applyCh {
 			err_msg := ""
 			if m.UseSnapshot {
@@ -150,8 +159,8 @@ func (cfg *config) start1(i int) {
 			} else if v, ok := (m.Command).(int); ok {
 				cfg.mu.Lock()
 				for j := 0; j < len(cfg.logs); j++ {
-					if old, oldok := cfg.logs[j][m.Index]; oldok && old != v {
-						// some server has already committed a different value for this entry!
+					if old, oldok := cfg.logs[j][m.Index]; oldok && old != v { //cfg.logs[j][m.Index]出来的是第j个节点的第m.Index条指令(指令是int类型的)
+						// some server has already committed a different value for this entry! 同一个index的指令被commit了2次。
 						err_msg = fmt.Sprintf("commit index=%v server=%v %v != server=%v %v",
 							m.Index, i, m.Command, j, old)
 					}
@@ -160,7 +169,7 @@ func (cfg *config) start1(i int) {
 				cfg.logs[i][m.Index] = v
 				cfg.mu.Unlock()
 
-				if m.Index > 1 && prevok == false {
+				if m.Index > 1 && prevok == false { //这个应该是说 当前要commit的日志项的前一个日志项还没接收到?
 					err_msg = fmt.Sprintf("server %v apply out of order %v", i, m.Index)
 				}
 			} else {
@@ -188,6 +197,7 @@ func (cfg *config) start1(i int) {
 	cfg.net.AddServer(i, srv)
 }
 
+// 清空所有节点
 func (cfg *config) cleanup() {
 	for i := 0; i < len(cfg.rafts); i++ {
 		if cfg.rafts[i] != nil {
@@ -197,9 +207,9 @@ func (cfg *config) cleanup() {
 	atomic.StoreInt32(&cfg.done, 1)
 }
 
-// attach server i to the net.
+// attach server i to the net. 建立一个双向连接，每个节点 既是服务端，又是 客户端
 func (cfg *config) connect(i int) {
-	// fmt.Printf("connect(%d)\n", i)
+	//fmt.Printf("connect(%d)\n", i)
 
 	cfg.connected[i] = true
 
@@ -222,7 +232,7 @@ func (cfg *config) connect(i int) {
 
 // detach server i from the net.
 func (cfg *config) disconnect(i int) {
-	// fmt.Printf("disconnect(%d)\n", i)
+	//fmt.Printf("disconnect(%d)\n", i)
 
 	cfg.connected[i] = false
 
@@ -260,17 +270,16 @@ func (cfg *config) setlongreordering(longrel bool) {
 func (cfg *config) checkOneLeader() int {
 	for iters := 0; iters < 10; iters++ {
 		time.Sleep(500 * time.Millisecond)
-		leaders := make(map[int][]int)
+		leaders := make(map[int][]int) //key存的是term，value是 指定term的leader的数组(但是同一任期 leader的数量理应只有一个)
 		for i := 0; i < cfg.n; i++ {
 			if cfg.connected[i] {
-				if t, leader := cfg.rafts[i].GetState(); leader {
+				if t, leader := cfg.rafts[i].GetState(); leader { //leader返回的是bool 表示i节点是否是leader
 					leaders[t] = append(leaders[t], i)
 				}
 			}
 		}
-
 		lastTermWithLeader := -1
-		for t, leaders := range leaders {
+		for t, leaders := range leaders { //它是为了拿到当前term，但是也要检查一下之前的term里面有没出现多leader的情况
 			if len(leaders) > 1 {
 				cfg.t.Fatalf("term %d has %d (>1) leaders", t, len(leaders))
 			}
@@ -319,6 +328,7 @@ func (cfg *config) checkNoLeader() {
 func (cfg *config) nCommitted(index int) (int, interface{}) {
 	count := 0
 	cmd := -1
+	// fmt.Printf("cfg.logs: %v\n", cfg.logs)
 	for i := 0; i < len(cfg.rafts); i++ {
 		if cfg.applyErr[i] != "" {
 			cfg.t.Fatal(cfg.applyErr[i])
@@ -326,10 +336,12 @@ func (cfg *config) nCommitted(index int) (int, interface{}) {
 
 		cfg.mu.Lock()
 		cmd1, ok := cfg.logs[i][index]
+		// fmt.Printf("cfg.logs: %v\n", cfg.logs)
+		// fmt.Printf("index: %d, cmd1: %d\n", index, cmd1)
 		cfg.mu.Unlock()
 
 		if ok {
-			if count > 0 && cmd != cmd1 {
+			if count > 0 && cmd != cmd1 { //这个第一次的时候 cmd确实是不等于cmd1, 但count=0所以跳过了这个判断的语句
 				cfg.t.Fatalf("committed values do not match: index %v, %v, %v\n",
 					index, cmd, cmd1)
 			}
@@ -337,11 +349,12 @@ func (cfg *config) nCommitted(index int) (int, interface{}) {
 			cmd = cmd1
 		}
 	}
+	// fmt.Printf("count: %d, cmd: %v\n", count, cmd)
 	return count, cmd
 }
 
 // wait for at least n servers to commit.
-// but don't wait forever.
+// but don't wait forever. 迭代30次，分别等20、40、80、160、320、640、1280、1280、1280...1280毫秒
 func (cfg *config) wait(index int, n int, startTerm int) interface{} {
 	to := 10 * time.Millisecond
 	for iters := 0; iters < 30; iters++ {
@@ -355,7 +368,7 @@ func (cfg *config) wait(index int, n int, startTerm int) interface{} {
 		}
 		if startTerm > -1 {
 			for _, r := range cfg.rafts {
-				if t, _ := r.GetState(); t > startTerm {
+				if t, _ := r.GetState(); t > startTerm { //怎么不先判断这个节点有没有挂掉啊??? 不过好像并没有去模拟节点挂掉的情况
 					// someone has moved on
 					// can no longer guarantee that we'll "win"
 					return -1
@@ -394,9 +407,14 @@ func (cfg *config) one(cmd int, expectedServers int) int {
 			}
 			cfg.mu.Unlock()
 			if rf != nil {
-				index1, _, ok := rf.Start(cmd)
+				//cmdBytes := GetBytes(cmd)
+				//sig := signature(cmdBytes)
+				//index1, _, ok := rf.Start(cmd, sig) //ok表示是否为leader
+				index1, _, ok := rf.Start(cmd) //ok表示是否为leader
+				// fmt.Printf("index1: %d, ok: %v\n", index1, ok)
 				if ok {
 					index = index1
+					// fmt.Printf("index: %d\n", index)
 					break
 				}
 			}
@@ -408,6 +426,7 @@ func (cfg *config) one(cmd int, expectedServers int) int {
 			t1 := time.Now()
 			for time.Since(t1).Seconds() < 2 {
 				nd, cmd1 := cfg.nCommitted(index)
+				// fmt.Printf("index: %d, nd: %d. cmd1: %d\n", index, nd, cmd1)
 				if nd > 0 && nd >= expectedServers {
 					// committed
 					if cmd2, ok := cmd1.(int); ok && cmd2 == cmd {
