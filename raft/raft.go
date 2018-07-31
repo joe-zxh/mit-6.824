@@ -71,6 +71,7 @@ type Raft struct {
 	logs []Entry //key是index  value是操作，这里用一个整数来表示的。
 
 	commitIndex int
+	commitTerm int //对应commitIndex的term，防止重复添加的 (TestRejoin)
 	lastApplied int //应该在ApplyMsg里面要用到
 
 	//leader要用到的量，用来处理日志不一致的
@@ -276,7 +277,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		if (i!=rf.me && rf.status==LEADER) {
 			prevLog:=rf.logs[len(rf.logs)-2]
 
-			args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, appendEntry, rf.commitIndex}
+			args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, appendEntry, rf.commitIndex, rf.commitTerm}
 			reply:=AppendEntriesReply{}
 
 			go func(server int) {
@@ -324,6 +325,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.logAppendNum = make(map[int]int)
 
 	rf.commitIndex = 0 //根据论文里面的图，都是从1开始计数的
+	rf.commitTerm = 0
 	rf.lastApplied = 0
 
 	rf.nextIndex = make([]int, len(rf.peers))
@@ -411,23 +413,48 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 	rf.getHeartBeat <- true
 
+	//if (args.LeaderCommitIndex>rf.commitIndex) {
+	//
+	//	oldCommitIndex:=rf.commitIndex//这个是为了通过测试用的, 测试要求：commit的顺序要逐个逐个递增(但其实只需要递增即可，不需要逐个逐个来)
+	//
+	//	if (args.LeaderCommitIndex< len(rf.logs)-1) {
+	//		rf.commitIndex = args.LeaderCommitIndex
+	//	} else {
+	//		rf.commitIndex = len(rf.logs)-1
+	//	}
+	//
+	//	for i:=oldCommitIndex+1;i<=rf.commitIndex;i++{
+	//		sendApplyMsg:=ApplyMsg{i, rf.logs[i].Command, false, []byte{}}
+	//		rf.applyCh <- sendApplyMsg
+	//	}
+	//
+	//	fmt.Printf("from follower [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
+	//}
+
+	//更新一下commitIndex 以及commitTerm
 	if (args.LeaderCommitIndex>rf.commitIndex) {
 
 		oldCommitIndex:=rf.commitIndex//这个是为了通过测试用的, 测试要求：commit的顺序要逐个逐个递增(但其实只需要递增即可，不需要逐个逐个来)
 
-		if (args.LeaderCommitIndex< len(rf.logs)-1) {
-			rf.commitIndex = args.LeaderCommitIndex
-		} else {
-			rf.commitIndex = len(rf.logs)-1
+		newCommitIndex:=-1
+
+		if (args.LeaderCommitIndex > len(rf.logs)-1) {
+			newCommitIndex = len(rf.logs)-1
+		} else if (args.LeaderCommitTerm==rf.logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
+			newCommitIndex = args.LeaderCommitIndex
 		}
 
-		for i:=oldCommitIndex+1;i<=rf.commitIndex;i++{
-			sendApplyMsg:=ApplyMsg{i, rf.logs[i].Command, false, []byte{}}
-			rf.applyCh <- sendApplyMsg
-		}
+		if (newCommitIndex!=-1){
+			rf.commitIndex = newCommitIndex
+			for i:=oldCommitIndex+1;i<=rf.commitIndex;i++{
+				sendApplyMsg:=ApplyMsg{i, rf.logs[i].Command, false, []byte{}}
+				rf.applyCh <- sendApplyMsg
+			}
 
-		fmt.Printf("from follower [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
+			fmt.Printf("from follower [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
+		}
 	}
+
 
 	if (args.Entries.Index==-1){ //心跳
 		return
@@ -442,9 +469,9 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		reply.Success = true
 
 		if (len(rf.logs)>args.Entries.Index) { //判断 是覆盖，还是添加
-			rf.logs[args.Entries.Index] = args.Entries
+			rf.logs[args.Entries.Index] = args.Entries //覆盖
 		} else {
-			rf.logs = append(rf.logs, args.Entries)
+			rf.logs = append(rf.logs, args.Entries) //添加
 		}
 
 		printLog(rf)
@@ -480,7 +507,8 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 			for i:=rf.commitIndex+1; i<len(rf.logs); i++ { //保证后面的项commit之前，前面的项都commit了
 				if (rf.logAppendNum[i]>len(rf.peers)/2) {
 					rf.commitIndex = i
-					fmt.Printf("from leader [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
+					rf.commitTerm = rf.logs[i].Term
+					fmt.Printf("from leader [%d] : commitIndex: %d  commitTerm\n", rf.me, rf.commitIndex, rf.commitTerm)
 
 					sendApplyMsg:=ApplyMsg{rf.commitIndex, rf.logs[rf.commitIndex].Command, false, []byte{}}
 					rf.applyCh <- sendApplyMsg
@@ -514,7 +542,7 @@ func broadcastAppendEntries(rf *Raft) {
 				entrySend.Index=-1 //index=-1表示是心跳
 			}
 
-			args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.commitIndex}
+			args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.commitIndex, rf.commitTerm}
 			reply:=AppendEntriesReply{}
 
 			go func(server int) {
@@ -531,7 +559,7 @@ type AppendEntriesArgs struct{
 	PrevLogTerm int
 	Entries Entry // index设为-1时 表示心跳
 	LeaderCommitIndex int
-
+	LeaderCommitTerm int
 }
 
 type AppendEntriesReply struct{
