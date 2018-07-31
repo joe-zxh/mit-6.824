@@ -85,6 +85,10 @@ type Raft struct {
 	voteCount int // 得到的票数
 	voteReplyOkCount int // 收到有效回复的总数
 	voteReplyCount int // 收到回复的总数
+
+	logAppendNum map[int]int // 已经append了这条索引为index的日志项的节点的个数
+
+	applyCh chan ApplyMsg
 }
 
 type Entry struct { //因为要进行RPC通讯，所以要大写
@@ -227,6 +231,7 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 		rf.voteCount++
 
 		//fmt.Printf("节点[%d]收到的投票数: %d  回复总数: %d  有效回复总数: %d   %v  %v\n", rf.me, rf.voteCount, rf.voteReplyCount, rf.voteReplyOkCount, rf.voteReplyCount==len(rf.peers), rf.voteCount> rf.voteReplyOkCount/2)
+		// 因为test2里面用了长延时，所以这样还是拿不到 回复的总数。不过可以尝试在外面一层 用超时来计算。但这样有点复杂
 
 		if(rf.voteCount> len(rf.peers)/2){ //大于一半的有效的节点投票了
 			rf.beLeader <- true
@@ -252,10 +257,34 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	index := -1
 	term := -1
-	isLeader := true
+	isLeader:=true
 
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if (rf.status!=LEADER){
+		isLeader = false
+		return index, term, isLeader
+	}
+	appendEntry:=Entry{rf.currentTerm, len(rf.logs), command }
 
-	return index, term, isLeader
+	rf.logs = append(rf.logs, appendEntry)
+	rf.logAppendNum[len(rf.logs)-1] = 1 //初始化为1
+
+	printLog(rf)
+
+	for i:=range(rf.peers) {
+		if (i!=rf.me && rf.status==LEADER) {
+			prevLog:=rf.logs[len(rf.logs)-2]
+
+			args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, appendEntry, rf.commitIndex}
+			reply:=AppendEntriesReply{}
+
+			go func(server int) {
+				rf.sendAppendEntries(server, args, &reply)
+			}(i)
+		}
+	}
+	return len(rf.logs)-1, rf.currentTerm, isLeader
 }
 
 //
@@ -287,9 +316,12 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here.
+	rf.applyCh = applyCh
+
 	rf.currentTerm = 0
 	rf.votedFor = -1
-	rf.logs = make([]Entry,1)
+	rf.logs = make([]Entry,1) // 为了从1开始索引，在index=0的位置加了一个空的日志项
+	rf.logAppendNum = make(map[int]int)
 
 	rf.commitIndex = 0 //根据论文里面的图，都是从1开始计数的
 	rf.lastApplied = 0
@@ -303,6 +335,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// initialize from state persisted before a crash
 	// rf.readPersist(persister.ReadRaftState())
+
+	printLog(rf)
 
 	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
 		for{
@@ -356,7 +390,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	return rf
 }
 
-
 func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) {
 
 	if (args.Term<rf.currentTerm) {
@@ -376,14 +409,28 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		reply.Term = args.Term
 	}
 
-	if (args.Entries.Index==-1){
-		rf.getHeartBeat <- true
+	rf.getHeartBeat <- true
+
+	if (args.LeaderCommitIndex>rf.commitIndex) {
+
+		if (args.LeaderCommitIndex< len(rf.logs)-1) {
+			rf.commitIndex = args.LeaderCommitIndex
+		} else {
+			rf.commitIndex = len(rf.logs)-1
+		}
+
+		sendApplyMsg:=ApplyMsg{rf.commitIndex, rf.logs[rf.commitIndex].Command, false, []byte{}}
+
+		rf.applyCh <- sendApplyMsg
+
+		fmt.Printf("from follower [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
+	}
+
+	if (args.Entries.Index==-1){ //心跳
 		return
 	}
 
-	rf.getHeartBeat <- true
-
-	if (args.PrevLogIndex >= len(rf.logs)-1) { //index不存在
+	if (args.PrevLogIndex > len(rf.logs)-1) { //index不存在
 		reply.Success = false
 		return
 	} else if(rf.logs[args.PrevLogIndex].Term!=args.PrevLogTerm){ //index存在 但term不相等
@@ -396,6 +443,8 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		} else {
 			rf.logs = append(rf.logs, args.Entries)
 		}
+
+		printLog(rf)
 	}
 }
 
@@ -421,13 +470,27 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 		if (args.Entries.Index!=-1) { //不是心跳
 			rf.matchIndex[server] = args.Entries.Index
 			rf.nextIndex[server] = rf.matchIndex[server]+1
+
+			ind:=args.Entries.Index
+			rf.logAppendNum[ind]++
+
+			for i:=rf.commitIndex+1; i<len(rf.logs); i++ { //保证后面的项commit之前，前面的项都commit了
+				if (rf.logAppendNum[i]>len(rf.peers)/2) {
+					rf.commitIndex = i
+					fmt.Printf("from leader [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
+
+					sendApplyMsg:=ApplyMsg{rf.commitIndex, rf.logs[rf.commitIndex].Command, false, []byte{}}
+					rf.applyCh <- sendApplyMsg
+				} else {
+					break
+				}
+			}
 		}
 	} else {
 		if (rf.nextIndex[server]>1) {
 			rf.nextIndex[server]--
 		}
 	}
-
 	return true
 }
 
@@ -473,7 +536,6 @@ type AppendEntriesReply struct{
 	Success bool
 }
 
-
 // candidate的leader选举
 func election(rf *Raft) {
 	rf.mu.Lock()
@@ -508,4 +570,13 @@ func broadcastRequestVote(rf *Raft){
 
 func getRandomExpireTime() time.Duration{ //150-300ms
 	return time.Duration(rand.Int63n(300-150)+150)*time.Millisecond
+}
+
+
+func printLog(rf *Raft) {
+	fmt.Printf("server[%d]: ", rf.me)
+	for _, entry:=range rf.logs {
+		fmt.Printf("i:%d t:%d c:%v -> ", entry.Index, entry.Term, entry.Command)
+	}
+	fmt.Println()
 }

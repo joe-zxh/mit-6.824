@@ -268,7 +268,6 @@ func (rn *Network) ProcessReq(req reqMsg) {
 		time.Sleep(time.Duration(ms) * time.Millisecond)
 		req.replyCh <- replyMsg{false, nil}
 	}
-
 }
 
 // create a client end-point.

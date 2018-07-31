@@ -173,7 +173,7 @@ func (cfg *config) start1(i int) {
 					err_msg = fmt.Sprintf("server %v apply out of order %v", i, m.Index)
 				}
 			} else {
-				err_msg = fmt.Sprintf("committed command %v is not an int", m.Command)
+				err_msg = fmt.Sprintf("server[%d] committed command %v is not an int", i, m.Command)
 			}
 
 			if err_msg != "" {
@@ -426,7 +426,7 @@ func (cfg *config) one(cmd int, expectedServers int) int {
 			t1 := time.Now()
 			for time.Since(t1).Seconds() < 2 {
 				nd, cmd1 := cfg.nCommitted(index)
-				// fmt.Printf("index: %d, nd: %d. cmd1: %d\n", index, nd, cmd1)
+				fmt.Printf("index: %d, nd: %d. cmd1: %d\n", index, nd, cmd1)
 				if nd > 0 && nd >= expectedServers {
 					// committed
 					if cmd2, ok := cmd1.(int); ok && cmd2 == cmd {
