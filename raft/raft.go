@@ -269,7 +269,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	appendEntry:=Entry{rf.currentTerm, len(rf.logs), command }
 
 	rf.logs = append(rf.logs, appendEntry)
-	rf.logAppendNum[len(rf.logs)-1] = 1 //初始化为1
+	rf.logAppendNum[len(rf.logs)-1] = 1 //初始化为1 joe
 
 	printLog(rf)
 
@@ -446,15 +446,15 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 		if (newCommitIndex!=-1){
 			rf.commitIndex = newCommitIndex
+			rf.commitTerm = rf.logs[newCommitIndex].Term
 			for i:=oldCommitIndex+1;i<=rf.commitIndex;i++{
 				sendApplyMsg:=ApplyMsg{i, rf.logs[i].Command, false, []byte{}}
 				rf.applyCh <- sendApplyMsg
 			}
 
-			fmt.Printf("from follower [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
+			fmt.Printf("from follower [%d] : commitIndex: %d  commitTerm: %d\n", rf.me, rf.commitIndex, rf.commitTerm)
 		}
 	}
-
 
 	if (args.Entries.Index==-1){ //心跳
 		return
@@ -466,9 +466,16 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 	} else if(rf.logs[args.PrevLogIndex].Term!=args.PrevLogTerm){ //index存在 但term不相等
 		reply.Success = false
 	} else { //match
+
 		reply.Success = true
 
 		if (len(rf.logs)>args.Entries.Index) { //判断 是覆盖，还是添加
+
+			if(rf.logs[args.Entries.Index].Term==args.Entries.Term&&rf.logs[args.Entries.Index].Index==args.Entries.Index) { //避免重复添加
+				reply.Success = false
+				return
+			}
+
 			rf.logs[args.Entries.Index] = args.Entries //覆盖
 		} else {
 			rf.logs = append(rf.logs, args.Entries) //添加
@@ -477,6 +484,79 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		printLog(rf)
 	}
 }
+
+//func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) {
+//
+//	if (args.Term<rf.currentTerm) {
+//		reply.Success = false
+//		reply.Term = rf.currentTerm
+//		rf.status = CANDIDATE
+//		rf.voteCount = 0
+//		fmt.Printf("AppendEntries - Server [%d] becomes CANDIDATE.\n", rf.me)
+//		return
+//	}
+//
+//	if (args.Term>rf.currentTerm) {
+//		rf.status = FOLLOWER
+//		fmt.Printf("AppendEntries - Server [%d] becomes FOLLOWER, Current Time: %v\n", rf.me, time.Now().UnixNano()/1000000)
+//		rf.votedFor = -1
+//		rf.currentTerm = args.Term
+//		reply.Term = args.Term
+//	}
+//
+//	rf.getHeartBeat <- true
+//
+//	if (args.Entries.Index!=-1) { //不是心跳
+//		if (args.PrevLogIndex > len(rf.logs)-1) { //index不存在
+//			reply.Success = false
+//			return
+//		} else if(rf.logs[args.PrevLogIndex].Term!=args.PrevLogTerm){ //index存在 但term不相等
+//			reply.Success = false
+//		} else { //match
+//
+//			reply.Success = true
+//
+//			if (len(rf.logs)>args.Entries.Index) { //判断 是覆盖，还是添加
+//
+//				if(rf.logs[args.Entries.Index].Term==args.Entries.Term&&rf.logs[args.Entries.Index].Index==args.Entries.Index) { //避免重复添加
+//					reply.Success = false
+//					return
+//				}
+//
+//				rf.logs[args.Entries.Index] = args.Entries //覆盖
+//			} else {
+//				rf.logs = append(rf.logs, args.Entries) //添加
+//			}
+//
+//			printLog(rf)
+//		}
+//	}
+//
+//	//更新一下commitIndex 以及commitTerm
+//	if (args.LeaderCommitIndex>rf.commitIndex) {
+//
+//		oldCommitIndex:=rf.commitIndex//这个是为了通过测试用的, 测试要求：commit的顺序要逐个逐个递增(但其实只需要递增即可，不需要逐个逐个来)
+//
+//		newCommitIndex:=-1
+//
+//		if (args.LeaderCommitIndex > len(rf.logs)-1) {
+//			newCommitIndex = len(rf.logs)-1
+//		} else if (args.LeaderCommitTerm==rf.logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
+//			newCommitIndex = args.LeaderCommitIndex
+//		}
+//
+//		if (newCommitIndex!=-1){
+//			rf.commitIndex = newCommitIndex
+//			rf.commitTerm = rf.logs[newCommitIndex].Term
+//			for i:=oldCommitIndex+1;i<=rf.commitIndex;i++{
+//				sendApplyMsg:=ApplyMsg{i, rf.logs[i].Command, false, []byte{}}
+//				rf.applyCh <- sendApplyMsg
+//			}
+//
+//			fmt.Printf("from follower [%d] : commitIndex: %d  commitTerm: %d\n", rf.me, rf.commitIndex, rf.commitTerm)
+//		}
+//	}
+//}
 
 func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *AppendEntriesReply) bool {
 
@@ -504,11 +584,18 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 			ind:=args.Entries.Index
 			rf.logAppendNum[ind]++
 
+			if(ind==2){
+				fmt.Printf("++from[%d]  index=2时的append个数: %d\n", server,rf.logAppendNum[ind])
+			}
+
 			for i:=rf.commitIndex+1; i<len(rf.logs); i++ { //保证后面的项commit之前，前面的项都commit了
-				if (rf.logAppendNum[i]>len(rf.peers)/2) {
+
+				if (rf.logAppendNum[i]>len(rf.peers)/2 ) { //&& rf.logs[i].Term<rf.currentTerm 只能commit之前任期的项
+
+					fmt.Printf("Debug: %d   %d\n", rf.logAppendNum[i], len(rf.peers)/2)
 					rf.commitIndex = i
 					rf.commitTerm = rf.logs[i].Term
-					fmt.Printf("from leader [%d] : commitIndex: %d  commitTerm\n", rf.me, rf.commitIndex, rf.commitTerm)
+					fmt.Printf("from leader [%d] : commitIndex: %d  commitTerm: %d\n", rf.me, rf.commitIndex, rf.commitTerm)
 
 					sendApplyMsg:=ApplyMsg{rf.commitIndex, rf.logs[rf.commitIndex].Command, false, []byte{}}
 					rf.applyCh <- sendApplyMsg
@@ -600,7 +687,9 @@ func broadcastRequestVote(rf *Raft){
 }
 
 func getRandomExpireTime() time.Duration{ //150-300ms
-	return time.Duration(rand.Int63n(300-150)+150)*time.Millisecond
+	start:=int64(150)
+	end:=int64(300)
+	return time.Duration(rand.Int63n(end-start)+start)*time.Millisecond
 }
 
 
