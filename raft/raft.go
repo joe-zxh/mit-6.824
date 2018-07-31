@@ -273,18 +273,18 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 
 	printLog(rf)
 
-	for i:=range(rf.peers) {
-		if (i!=rf.me && rf.status==LEADER) {
-			prevLog:=rf.logs[len(rf.logs)-2]
-
-			args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, appendEntry, rf.commitIndex, rf.commitTerm}
-			reply:=AppendEntriesReply{}
-
-			go func(server int) {
-				rf.sendAppendEntries(server, args, &reply)
-			}(i)
-		}
-	}
+	//for i:=range(rf.peers) {
+	//	if (i!=rf.me && rf.status==LEADER) {
+	//		prevLog:=rf.logs[len(rf.logs)-2]
+	//
+	//		args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, appendEntry, rf.commitIndex, rf.commitTerm}
+	//		reply:=AppendEntriesReply{}
+	//
+	//		go func(server int) {
+	//			rf.sendAppendEntries(server, args, &reply)
+	//		}(i)
+	//	}
+	//}
 	return len(rf.logs)-1, rf.currentTerm, isLeader
 }
 

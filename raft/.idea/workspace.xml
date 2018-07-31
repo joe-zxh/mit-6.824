@@ -186,8 +186,8 @@
       <file leaf-file-name="test_test.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="342">
-              <caret line="329" column="1" selection-start-line="329" selection-start-column="1" selection-end-line="329" selection-end-column="1" />
+            <state relative-caret-position="-252">
+              <caret line="331" column="30" lean-forward="true" selection-start-line="331" selection-start-column="30" selection-end-line="331" selection-end-column="30" />
               <folding>
                 <element signature="e#220#317#0" expanded="true" />
                 <element signature="n#!!block;n#TestInitialElection#0" />
@@ -197,7 +197,6 @@
                 <element signature="n#!!block;n#TestFailNoAgree#0" />
                 <element signature="n#!!block;n#TestConcurrentStarts#0" />
                 <element signature="n#!!block;n#TestRejoin#0" />
-                <element signature="n#!!block;n#TestBackup#0" />
                 <element signature="n#!!block;n#TestCount#0" />
                 <element signature="n#!!block;n#TestPersist1#0" />
                 <element signature="n#!!block;n#TestPersist2#0" />
@@ -216,8 +215,8 @@
       <file leaf-file-name="raft.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/raft.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="152">
-              <caret line="30" column="27" selection-start-line="30" selection-start-column="27" selection-end-line="30" selection-end-column="27" />
+            <state relative-caret-position="329">
+              <caret line="275" column="4" selection-start-line="275" selection-start-column="6" selection-end-line="286" selection-end-column="7" />
               <folding>
                 <element signature="e#14#16#0" />
                 <element signature="e#655#672#0" />
@@ -256,26 +255,18 @@
                 <element signature="e#5940#6137#0" />
                 <element signature="e#6237#6281#0" />
                 <element signature="e#6300#6302#0" />
-                <element signature="e#6961#7675#0" />
                 <element signature="e#7064#7118#0" />
                 <element signature="e#7138#7178#0" />
-                <element signature="e#7305#7624#0" />
-                <element signature="e#7344#7621#0" />
                 <element signature="e#7409#7505#0" />
-                <element signature="e#7561#7614#0" />
                 <element signature="e#7677#7679#0" />
                 <element signature="e#7919#7954#0" />
                 <element signature="e#7956#7958#0" />
                 <element signature="e#8602#10790#0" />
                 <element signature="e#9150#9199#0" />
-                <element signature="e#9280#10772#0" />
-                <element signature="e#9374#10769#0" />
-                <element signature="e#9379#10765#0" />
                 <element signature="e#9400#9924#0" />
                 <element signature="e#9419#9924#0" />
                 <element signature="e#9432#9868#0" />
                 <element signature="e#9760#9766#0" />
-                <element signature="e#9929#10061#0" />
                 <element signature="e#10066#10760#0" />
                 <element signature="e#10104#10760#0" />
                 <element signature="e#10117#10435#0" />
@@ -344,7 +335,6 @@
       <find>HEYHEY</find>
       <find>checkNoLeader</find>
       <find>for</find>
-      <find>broadcastAppendEntries</find>
       <find>commitIndex</find>
       <find>logs</find>
       <find>sendApplyMsg</find>
@@ -360,6 +350,8 @@
       <find>i</find>
       <find />
       <find>reply.Success</find>
+      <find />
+      <find>broadcastAppendEntries</find>
     </findStrings>
   </component>
   <component name="GOROOT" path="D:\Go" />
@@ -446,7 +438,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.TestBackup in raft">
+  <component name="RunManager" selected="Go Test.TestCount in raft">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="raft" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -528,8 +520,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.TestBackup in raft" />
         <item itemvalue="Go Test.TestCount in raft" />
+        <item itemvalue="Go Test.TestBackup in raft" />
         <item itemvalue="Go Test.TestRejoin in raft" />
         <item itemvalue="Go Test.TestConcurrentStarts in raft" />
         <item itemvalue="Go Test.TestFailNoAgree in raft" />
@@ -537,9 +529,6 @@
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="TestConcurrentStarts_in_raft - 2018.07.31 at 21h 35m 45s.xml">
-      <configuration name="TestConcurrentStarts in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="TestRejoin_in_raft - 2018.07.31 at 21h 35m 58s.xml">
       <configuration name="TestRejoin in raft" configurationId="GoTestRunConfiguration" />
     </history-entry>
@@ -567,6 +556,9 @@
     <history-entry file="TestCount_in_raft - 2018.07.31 at 21h 41m 35s.xml">
       <configuration name="TestCount in raft" configurationId="GoTestRunConfiguration" />
     </history-entry>
+    <history-entry file="TestBackup_in_raft - 2018.07.31 at 21h 41m 45s.xml">
+      <configuration name="TestBackup in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -579,7 +571,7 @@
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49946696" visible="true" weight="0.4047619" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49946696" visible="true" weight="0.14935064" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -696,7 +688,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -892,7 +883,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -1088,7 +1078,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -1145,26 +1134,18 @@
             <element signature="e#5940#6137#0" />
             <element signature="e#6237#6281#0" />
             <element signature="e#6300#6302#0" />
-            <element signature="e#6961#7675#0" />
             <element signature="e#7064#7118#0" />
             <element signature="e#7138#7178#0" />
-            <element signature="e#7305#7624#0" />
-            <element signature="e#7344#7621#0" />
             <element signature="e#7409#7505#0" />
-            <element signature="e#7561#7614#0" />
             <element signature="e#7677#7679#0" />
             <element signature="e#7919#7954#0" />
             <element signature="e#7956#7958#0" />
             <element signature="e#8602#10790#0" />
             <element signature="e#9150#9199#0" />
-            <element signature="e#9280#10772#0" />
-            <element signature="e#9374#10769#0" />
-            <element signature="e#9379#10765#0" />
             <element signature="e#9400#9924#0" />
             <element signature="e#9419#9924#0" />
             <element signature="e#9432#9868#0" />
             <element signature="e#9760#9766#0" />
-            <element signature="e#9929#10061#0" />
             <element signature="e#10066#10760#0" />
             <element signature="e#10104#10760#0" />
             <element signature="e#10117#10435#0" />
@@ -1228,7 +1209,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -1285,26 +1265,18 @@
             <element signature="e#5940#6137#0" />
             <element signature="e#6237#6281#0" />
             <element signature="e#6300#6302#0" />
-            <element signature="e#6961#7675#0" />
             <element signature="e#7064#7118#0" />
             <element signature="e#7138#7178#0" />
-            <element signature="e#7305#7624#0" />
-            <element signature="e#7344#7621#0" />
             <element signature="e#7409#7505#0" />
-            <element signature="e#7561#7614#0" />
             <element signature="e#7677#7679#0" />
             <element signature="e#7919#7954#0" />
             <element signature="e#7956#7958#0" />
             <element signature="e#8602#10790#0" />
             <element signature="e#9150#9199#0" />
-            <element signature="e#9280#10772#0" />
-            <element signature="e#9374#10769#0" />
-            <element signature="e#9379#10765#0" />
             <element signature="e#9400#9924#0" />
             <element signature="e#9419#9924#0" />
             <element signature="e#9432#9868#0" />
             <element signature="e#9760#9766#0" />
-            <element signature="e#9929#10061#0" />
             <element signature="e#10066#10760#0" />
             <element signature="e#10104#10760#0" />
             <element signature="e#10117#10435#0" />
@@ -1739,7 +1711,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -1796,26 +1767,18 @@
             <element signature="e#5940#6137#0" />
             <element signature="e#6237#6281#0" />
             <element signature="e#6300#6302#0" />
-            <element signature="e#6961#7675#0" />
             <element signature="e#7064#7118#0" />
             <element signature="e#7138#7178#0" />
-            <element signature="e#7305#7624#0" />
-            <element signature="e#7344#7621#0" />
             <element signature="e#7409#7505#0" />
-            <element signature="e#7561#7614#0" />
             <element signature="e#7677#7679#0" />
             <element signature="e#7919#7954#0" />
             <element signature="e#7956#7958#0" />
             <element signature="e#8602#10790#0" />
             <element signature="e#9150#9199#0" />
-            <element signature="e#9280#10772#0" />
-            <element signature="e#9374#10769#0" />
-            <element signature="e#9379#10765#0" />
             <element signature="e#9400#9924#0" />
             <element signature="e#9419#9924#0" />
             <element signature="e#9432#9868#0" />
             <element signature="e#9760#9766#0" />
-            <element signature="e#9929#10061#0" />
             <element signature="e#10066#10760#0" />
             <element signature="e#10104#10760#0" />
             <element signature="e#10117#10435#0" />
@@ -1879,7 +1842,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -2075,7 +2037,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -2271,7 +2232,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -2328,26 +2288,18 @@
             <element signature="e#5940#6137#0" />
             <element signature="e#6237#6281#0" />
             <element signature="e#6300#6302#0" />
-            <element signature="e#6961#7675#0" />
             <element signature="e#7064#7118#0" />
             <element signature="e#7138#7178#0" />
-            <element signature="e#7305#7624#0" />
-            <element signature="e#7344#7621#0" />
             <element signature="e#7409#7505#0" />
-            <element signature="e#7561#7614#0" />
             <element signature="e#7677#7679#0" />
             <element signature="e#7919#7954#0" />
             <element signature="e#7956#7958#0" />
             <element signature="e#8602#10790#0" />
             <element signature="e#9150#9199#0" />
-            <element signature="e#9280#10772#0" />
-            <element signature="e#9374#10769#0" />
-            <element signature="e#9379#10765#0" />
             <element signature="e#9400#9924#0" />
             <element signature="e#9419#9924#0" />
             <element signature="e#9432#9868#0" />
             <element signature="e#9760#9766#0" />
-            <element signature="e#9929#10061#0" />
             <element signature="e#10066#10760#0" />
             <element signature="e#10104#10760#0" />
             <element signature="e#10117#10435#0" />
@@ -2411,7 +2363,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -2468,26 +2419,18 @@
             <element signature="e#5940#6137#0" />
             <element signature="e#6237#6281#0" />
             <element signature="e#6300#6302#0" />
-            <element signature="e#6961#7675#0" />
             <element signature="e#7064#7118#0" />
             <element signature="e#7138#7178#0" />
-            <element signature="e#7305#7624#0" />
-            <element signature="e#7344#7621#0" />
             <element signature="e#7409#7505#0" />
-            <element signature="e#7561#7614#0" />
             <element signature="e#7677#7679#0" />
             <element signature="e#7919#7954#0" />
             <element signature="e#7956#7958#0" />
             <element signature="e#8602#10790#0" />
             <element signature="e#9150#9199#0" />
-            <element signature="e#9280#10772#0" />
-            <element signature="e#9374#10769#0" />
-            <element signature="e#9379#10765#0" />
             <element signature="e#9400#9924#0" />
             <element signature="e#9419#9924#0" />
             <element signature="e#9432#9868#0" />
             <element signature="e#9760#9766#0" />
-            <element signature="e#9929#10061#0" />
             <element signature="e#10066#10760#0" />
             <element signature="e#10104#10760#0" />
             <element signature="e#10117#10435#0" />
@@ -2911,8 +2854,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="329" column="1" selection-start-line="329" selection-start-column="1" selection-end-line="329" selection-end-column="1" />
+        <state relative-caret-position="-252">
+          <caret line="331" column="30" lean-forward="true" selection-start-line="331" selection-start-column="30" selection-end-line="331" selection-end-column="30" />
           <folding>
             <element signature="e#220#317#0" expanded="true" />
             <element signature="n#!!block;n#TestInitialElection#0" />
@@ -2922,7 +2865,6 @@
             <element signature="n#!!block;n#TestFailNoAgree#0" />
             <element signature="n#!!block;n#TestConcurrentStarts#0" />
             <element signature="n#!!block;n#TestRejoin#0" />
-            <element signature="n#!!block;n#TestBackup#0" />
             <element signature="n#!!block;n#TestCount#0" />
             <element signature="n#!!block;n#TestPersist1#0" />
             <element signature="n#!!block;n#TestPersist2#0" />
@@ -2939,8 +2881,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/raft.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="30" column="27" selection-start-line="30" selection-start-column="27" selection-end-line="30" selection-end-column="27" />
+        <state relative-caret-position="329">
+          <caret line="275" column="4" selection-start-line="275" selection-start-column="6" selection-end-line="286" selection-end-column="7" />
           <folding>
             <element signature="e#14#16#0" />
             <element signature="e#655#672#0" />
@@ -2979,26 +2921,18 @@
             <element signature="e#5940#6137#0" />
             <element signature="e#6237#6281#0" />
             <element signature="e#6300#6302#0" />
-            <element signature="e#6961#7675#0" />
             <element signature="e#7064#7118#0" />
             <element signature="e#7138#7178#0" />
-            <element signature="e#7305#7624#0" />
-            <element signature="e#7344#7621#0" />
             <element signature="e#7409#7505#0" />
-            <element signature="e#7561#7614#0" />
             <element signature="e#7677#7679#0" />
             <element signature="e#7919#7954#0" />
             <element signature="e#7956#7958#0" />
             <element signature="e#8602#10790#0" />
             <element signature="e#9150#9199#0" />
-            <element signature="e#9280#10772#0" />
-            <element signature="e#9374#10769#0" />
-            <element signature="e#9379#10765#0" />
             <element signature="e#9400#9924#0" />
             <element signature="e#9419#9924#0" />
             <element signature="e#9432#9868#0" />
             <element signature="e#9760#9766#0" />
-            <element signature="e#9929#10061#0" />
             <element signature="e#10066#10760#0" />
             <element signature="e#10104#10760#0" />
             <element signature="e#10117#10435#0" />
