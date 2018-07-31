@@ -439,9 +439,11 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 		newCommitIndex:=-1
 
-		if (args.LeaderCommitIndex > len(rf.logs)-1) {
-			newCommitIndex = len(rf.logs)-1
-		} else if (args.LeaderCommitTerm==rf.logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
+		//if (args.LeaderCommitIndex > len(rf.logs)-1) {
+		//	newCommitIndex = len(rf.logs)-1
+		//} else
+		// 这边的话，leader发来的index值一定要<=当前节点的index才行，不然无法保证当前节点是否和leader拥有在commitIndex处拥有相同的日志项
+		if (args.LeaderCommitIndex <= len(rf.logs)-1&&args.LeaderCommitTerm==rf.logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
 			newCommitIndex = args.LeaderCommitIndex
 		}
 
