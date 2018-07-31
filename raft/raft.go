@@ -83,7 +83,8 @@ type Raft struct {
 	beLeader chan bool // requestVote之后，接收到超过半数节点的投票之后，往这个channel里面 放点东西
 	getHeartBeat chan bool // 接收到一个appendEntry的请求，就相当于 接收到一个leader的 心跳。这个量是为了当节点是follower或candidate时，不跳进 Make()里面 go func()里面 timeout的那个case里面的
 	voteCount int // 得到的票数
-
+	voteReplyOkCount int // 收到有效回复的总数
+	voteReplyCount int // 收到回复的总数
 }
 
 type Entry struct { //因为要进行RPC通讯，所以要大写
@@ -163,8 +164,7 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 
 	lastLog := rf.logs[len(rf.logs)-1]
 
-	if (args.Term>rf.currentTerm && rf.status==LEADER){ //LEADER收到更新的term之后，降级为follower
-	//加了rf.status==LEADER的条件，可以避免follower给2个不同任期的candidate投票的情况
+	if (args.Term>rf.currentTerm){ //收到更新的term之后，降级为follower
 		rf.currentTerm = args.Term
 		rf.status = FOLLOWER
 		rf.votedFor=-1
@@ -179,7 +179,7 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 
 	reply.Term = rf.currentTerm
 
-	fmt.Printf("节点[%d]收到[%d]的RequestVote, 投票:%t 投票给了:%d\n", rf.me, args.CandidateId, reply.VoteGranted, rf.votedFor)
+	fmt.Printf("节点[%d]收到[%d]的RequestVote, 投票:%t 投票给了:%d 当前term: %d\n", rf.me, args.CandidateId, reply.VoteGranted, rf.votedFor, rf.currentTerm)
 
 	//fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
 	//	rf.me, args.CandidateId, rf.currentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.votedFor)
@@ -209,7 +209,11 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 	defer rf.mu.Unlock()
 
 	if (!ok) { // 如果请求发送失败，直接返回。
+		rf.voteReplyCount++
 		return ok
+	} else {
+		rf.voteReplyCount++
+		rf.voteReplyOkCount++
 	}
 
 	if (reply.Term>rf.currentTerm) {
@@ -222,9 +226,9 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 	if (reply.VoteGranted && rf.status == CANDIDATE) {
 		rf.voteCount++
 
-		fmt.Printf("节点[%d]收到的投票数: %d\n", rf.me, rf.voteCount)
+		//fmt.Printf("节点[%d]收到的投票数: %d  回复总数: %d  有效回复总数: %d   %v  %v\n", rf.me, rf.voteCount, rf.voteReplyCount, rf.voteReplyOkCount, rf.voteReplyCount==len(rf.peers), rf.voteCount> rf.voteReplyOkCount/2)
 
-		if(rf.voteCount> len(rf.peers)/2){ //大于一半的节点投票了
+		if(rf.voteCount> len(rf.peers)/2){ //大于一半的有效的节点投票了
 			rf.beLeader <- true
 		}
 	}
@@ -297,7 +301,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.beLeader = make(chan bool, 1)
 	rf.getHeartBeat = make(chan bool, 1)
 
-
 	// initialize from state persisted before a crash
 	// rf.readPersist(persister.ReadRaftState())
 
@@ -311,7 +314,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					rf.votedFor = -1
 					rf.status = CANDIDATE
 					fmt.Printf("节点[%d]接收leader心跳超时, 变成candidate, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
-					rf.currentTerm = rf.currentTerm + 1 //选举之前，先自增一下任期, 这个自增的位置，和师兄的代码的位置不同!!!
+					//rf.currentTerm = rf.currentTerm + 1 //选举之前，先自增一下任期, 这个自增的位置，和师兄的代码的位置不同!!!
 					rf.mu.Unlock()
 
 				case <-rf.getHeartBeat: //这是为了不进入那个上面超时的case
@@ -342,7 +345,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					rf.status = FOLLOWER
 					rf.mu.Unlock()
 
-				//case <-time.After(500*time.Millisecond)://超时再没有接收到 有效的消息，那么 重新选举
+					//case <-time.After(500*time.Millisecond)://超时再没有接收到 有效的消息，那么 重新选举
 				case <-time.After(getRandomExpireTime())://超时再没有接收到 有效的消息，那么 重新选举
 
 				}
@@ -434,19 +437,19 @@ func broadcastAppendEntries(rf *Raft) {
 
 	for i:=range(rf.peers) {
 		if (i!=rf.me && rf.status==LEADER) {
-				prevLog:=rf.logs[rf.nextIndex[i]-1]
-				lastLog:=rf.logs[len(rf.logs)-1]
+			prevLog:=rf.logs[rf.nextIndex[i]-1]
+			lastLog:=rf.logs[len(rf.logs)-1]
 
-				entrySend:=Entry{}
+			entrySend:=Entry{}
 
-				if (lastLog.Index>=prevLog.Index+1 && rf.matchIndex[i]!=lastLog.Index) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
-					entrySend=rf.logs[rf.nextIndex[i]]
-				} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
-					entrySend.Index=-1 //index=-1表示是心跳
-				}
+			if (lastLog.Index>=prevLog.Index+1 && rf.matchIndex[i]!=lastLog.Index) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
+				entrySend=rf.logs[rf.nextIndex[i]]
+			} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
+				entrySend.Index=-1 //index=-1表示是心跳
+			}
 
-				args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.commitIndex}
-				reply:=AppendEntriesReply{}
+			args:=AppendEntriesArgs{rf.currentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.commitIndex}
+			reply:=AppendEntriesReply{}
 
 			go func(server int) {
 				rf.sendAppendEntries(server, args, &reply)
@@ -474,6 +477,7 @@ type AppendEntriesReply struct{
 // candidate的leader选举
 func election(rf *Raft) {
 	rf.mu.Lock()
+	rf.currentTerm++ //选举之前，先自增一下任期, 这个自增的位置，不能在外面，不然过不了test2!!!
 	rf.votedFor = rf.me
 	rf.voteCount = 1
 	rf.mu.Unlock()
@@ -486,6 +490,9 @@ func election(rf *Raft) {
 func broadcastRequestVote(rf *Raft){
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+
+	rf.voteReplyCount = 1 //投票给了自己
+	rf.voteReplyOkCount = 1
 
 	for i:=range rf.peers{
 		if (i!=rf.me && rf.status==CANDIDATE){
@@ -500,5 +507,5 @@ func broadcastRequestVote(rf *Raft){
 }
 
 func getRandomExpireTime() time.Duration{ //150-300ms
-	return time.Duration(rand.Int63n(600-150)+150)*time.Millisecond
+	return time.Duration(rand.Int63n(300-150)+150)*time.Millisecond
 }
