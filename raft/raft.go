@@ -413,15 +413,18 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 	if (args.LeaderCommitIndex>rf.commitIndex) {
 
+		oldCommitIndex:=rf.commitIndex//这个是为了通过测试用的, 测试要求：commit的顺序要逐个逐个递增(但其实只需要递增即可，不需要逐个逐个来)
+
 		if (args.LeaderCommitIndex< len(rf.logs)-1) {
 			rf.commitIndex = args.LeaderCommitIndex
 		} else {
 			rf.commitIndex = len(rf.logs)-1
 		}
 
-		sendApplyMsg:=ApplyMsg{rf.commitIndex, rf.logs[rf.commitIndex].Command, false, []byte{}}
-
-		rf.applyCh <- sendApplyMsg
+		for i:=oldCommitIndex+1;i<=rf.commitIndex;i++{
+			sendApplyMsg:=ApplyMsg{i, rf.logs[i].Command, false, []byte{}}
+			rf.applyCh <- sendApplyMsg
+		}
 
 		fmt.Printf("from follower [%d] : commitIndex: %d\n", rf.me, rf.commitIndex)
 	}
