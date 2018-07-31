@@ -411,6 +411,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		reply.Term = args.Term
 	}
 
+	reply.Term = rf.currentTerm
 	rf.getHeartBeat <- true
 
 	//if (args.LeaderCommitIndex>rf.commitIndex) {
@@ -465,10 +466,16 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		return
 	} else if(rf.logs[args.PrevLogIndex].Term!=args.PrevLogTerm){ //index存在 但term不相等
 		reply.Success = false
+		return
 	} else { //match
 		reply.Success = true
 
 		if (len(rf.logs)>args.Entries.Index) { //判断 是覆盖，还是添加
+			if(rf.logs[args.Entries.Index].Term==args.Entries.Term&&rf.logs[args.Entries.Index].Index==args.Entries.Index) { //避免重复添加
+				return
+			}
+
+			////!!!!!!!!!!
 			rf.logs[args.Entries.Index] = args.Entries //覆盖
 		} else {
 			rf.logs = append(rf.logs, args.Entries) //添加
