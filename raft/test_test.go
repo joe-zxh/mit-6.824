@@ -13,11 +13,33 @@ import "fmt"
 import "time"
 import "math/rand"
 import "sync/atomic"
-import "sync"
+import (
+	"sync"
+	"bytes"
+	"encoding/gob"
+)
 
 // The tester generously allows solutions to complete elections in one second
 // (much more than the paper's range of timeouts).
 const RaftElectionTimeout = 1000 * time.Millisecond
+
+func TestJoe(t *testing.T)  {
+
+	a:=[]int{1,2,3,4}
+	b:=[]int{}
+
+	w := new(bytes.Buffer)
+	e := gob.NewEncoder(w)
+	e.Encode(a)
+	data := w.Bytes()
+
+	r := bytes.NewBuffer(data)
+	d := gob.NewDecoder(r)
+	d.Decode(&b)
+
+	fmt.Println(len(b))
+	fmt.Println(b)
+}
 
 func TestInitialElection(t *testing.T) {
 	servers := 3
