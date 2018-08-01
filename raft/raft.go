@@ -118,7 +118,7 @@ func (rf *Raft) GetState() (int, bool) {
 // see paper's Figure 2 for a description of what should be persistent.
 //
 func (rf *Raft) persist() {
-	fmt.Printf("server[%d]:Saving Persist...\n", rf.me)
+	//fmt.Printf("server[%d]:Saving Persist...\n", rf.me)
 
 	// Your code here.
 	w := new(bytes.Buffer)
@@ -212,7 +212,7 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 
 	reply.Term = rf.CurrentTerm
 
-	fmt.Printf("节点[%d]收到[%d]的RequestVote, 投票:%t 投票给了:%d 当前term: %d\n", rf.me, args.CandidateId, reply.VoteGranted, rf.VotedFor, rf.CurrentTerm)
+	//fmt.Printf("节点[%d]收到[%d]的RequestVote, 投票:%t 投票给了:%d 当前term: %d\n", rf.me, args.CandidateId, reply.VoteGranted, rf.VotedFor, rf.CurrentTerm)
 
 	//fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
 	//	rf.me, args.CandidateId, rf.CurrentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.VotedFor)
@@ -301,7 +301,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.logAppendNum[len(rf.Logs)-1] = 1 //初始化为1
 
 	rf.persist()
-	printLog(rf)
+	printLogEnd(rf)
 
 	return len(rf.Logs)-1, rf.CurrentTerm, isLeader
 }
@@ -356,7 +356,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
-	printLog(rf)
+	printLogEnd(rf)
 
 	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
 		for{
@@ -484,7 +484,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 			rf.Logs = append(rf.Logs, args.Entries) //添加
 		}
 		rf.persist()
-		printLog(rf)
+		printLogEnd(rf)
 	}
 }
 
@@ -519,7 +519,7 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 				if (rf.logAppendNum[i]>len(rf.peers)/2) {
 					rf.CommitIndex = i
 					rf.CommitTerm = rf.Logs[i].Term
-					fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm\n", rf.me, rf.CommitIndex, rf.CommitTerm)
+					fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
 
 					rf.persist()
 					sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
@@ -622,5 +622,23 @@ func printLog(rf *Raft) {
 	for _, entry:=range rf.Logs {
 		fmt.Printf("i:%d t:%d c:%v -> ", entry.Index, entry.Term, entry.Command)
 	}
+	fmt.Println()
+}
+
+// 只打印最后5条日志项
+func printLogEnd(rf *Raft) {
+	fmt.Printf("server[%d]: ", rf.me)
+
+	var i int
+	if (len(rf.Logs)>=6) {
+		i = len(rf.Logs)-6
+	} else {
+		i = 0
+	}
+
+	for ;i<len(rf.Logs);i++ {
+		fmt.Printf("i:%d t:%d c:%v -> ", rf.Logs[i].Index, rf.Logs[i].Term, rf.Logs[i].Command)
+	}
+
 	fmt.Println()
 }
