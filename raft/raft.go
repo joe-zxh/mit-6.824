@@ -32,6 +32,7 @@ import (
 
 const HEARTBEAT_TIME int = 50 // leader50ms发送一次心跳
 
+const PRINTNUM int = 10 // 打印最后10条日志项
 
 // 这个是用来测试用的 在config.go里面的start1()里面有个go func()检查
 // as(尽管) each Raft peer becomes aware that successive log entries are
@@ -301,7 +302,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.logAppendNum[len(rf.Logs)-1] = 1 //初始化为1
 
 	rf.persist()
-	printLogEnd(rf)
+	printLogEnd(rf, PRINTNUM)
 
 	return len(rf.Logs)-1, rf.CurrentTerm, isLeader
 }
@@ -356,7 +357,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
-	printLogEnd(rf)
+	printLogEnd(rf, PRINTNUM)
 
 	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
 		for{
@@ -386,7 +387,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 				case <-rf.beLeader:
 					rf.mu.Lock()
 					rf.status = LEADER
-					fmt.Printf("节点[%d]成为leader, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
+					fmt.Printf("节点[%d]成为leader, 时间: %v, 当前任期: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
 
 					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
 						rf.nextIndex[i] = len(rf.Logs)
@@ -484,7 +485,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 			rf.Logs = append(rf.Logs, args.Entries) //添加
 		}
 		rf.persist()
-		printLogEnd(rf)
+		printLogEnd(rf, PRINTNUM)
 	}
 }
 
@@ -625,13 +626,13 @@ func printLog(rf *Raft) {
 	fmt.Println()
 }
 
-// 只打印最后5条日志项
-func printLogEnd(rf *Raft) {
+// 只打印最后n条日志项
+func printLogEnd(rf *Raft, n int) {
 	fmt.Printf("server[%d]: ", rf.me)
 
 	var i int
-	if (len(rf.Logs)>=6) {
-		i = len(rf.Logs)-6
+	if (len(rf.Logs)>=(n+1)) {
+		i = len(rf.Logs)-(n+1)
 	} else {
 		i = 0
 	}

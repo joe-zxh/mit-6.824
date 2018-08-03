@@ -23,6 +23,43 @@
     <expand />
     <select />
   </component>
+  <component name="DockManager">
+    <window id="1">
+      <content type="file-editors">
+        <state>
+          <leaf>
+            <file leaf-file-name="test_test.go" pinned="false" current-in-tab="true">
+              <entry file="file://$PROJECT_DIR$/test_test.go">
+                <provider selected="true" editor-type-id="text-editor">
+                  <state relative-caret-position="-203">
+                    <caret line="665" column="31" lean-forward="true" selection-start-line="665" selection-start-column="31" selection-end-line="665" selection-end-column="31" />
+                    <folding>
+                      <element signature="e#830#1280#0" />
+                      <element signature="e#1316#2521#0" />
+                      <element signature="e#2557#2997#0" />
+                      <element signature="e#3032#3685#0" />
+                      <element signature="e#3722#4905#0" />
+                      <element signature="e#4947#6704#0" />
+                      <element signature="e#6736#7443#0" />
+                      <element signature="e#7475#9136#0" />
+                      <element signature="e#9167#11352#0" />
+                      <element signature="e#11386#12206#0" />
+                      <element signature="e#12240#13189#0" />
+                      <element signature="e#13223#13826#0" />
+                      <element signature="e#15453#15895#0" />
+                      <element signature="e#17085#19999#0" />
+                      <element signature="e#20038#20066#0" />
+                      <element signature="e#20107#20134#0" />
+                    </folding>
+                  </state>
+                </provider>
+              </entry>
+            </file>
+          </leaf>
+        </state>
+      </content>
+    </window>
+  </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="labrpc.go" pinned="false" current-in-tab="false">
@@ -166,8 +203,8 @@
       <file leaf-file-name="test_test.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="73">
-              <caret line="577" column="1" lean-forward="true" selection-start-line="577" selection-start-column="1" selection-end-line="577" selection-end-column="1" />
+            <state relative-caret-position="691">
+              <caret line="721" column="24" selection-start-line="721" selection-start-column="5" selection-end-line="721" selection-end-column="24" />
               <folding>
                 <element signature="e#830#1280#0" />
                 <element signature="e#1316#2521#0" />
@@ -196,8 +233,8 @@
       <file leaf-file-name="raft.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/raft.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="111">
-              <caret line="529" column="13" selection-start-line="529" selection-start-column="13" selection-end-line="529" selection-end-column="13" />
+            <state relative-caret-position="509">
+              <caret line="579" column="16" lean-forward="true" selection-start-line="579" selection-start-column="16" selection-end-line="579" selection-end-column="16" />
               <folding>
                 <element signature="e#14#16#0" />
                 <element signature="e#680#697#0" />
@@ -236,28 +273,19 @@
                 <element signature="e#6594#6791#0" />
                 <element signature="e#6891#6935#0" />
                 <element signature="e#6954#6956#0" />
-                <element signature="e#7615#8002#0" />
                 <element signature="e#7718#7772#0" />
                 <element signature="e#7792#7832#0" />
                 <element signature="e#8004#8006#0" />
                 <element signature="e#8246#8281#0" />
                 <element signature="e#8283#8285#0" />
-                <element signature="e#8929#11135#0" />
-                <element signature="e#9607#11117#0" />
-                <element signature="e#9701#11114#0" />
-                <element signature="e#9706#11110#0" />
                 <element signature="e#9727#10269#0" />
                 <element signature="e#9746#10269#0" />
                 <element signature="e#9759#10213#0" />
                 <element signature="e#10105#10111#0" />
                 <element signature="e#10274#10406#0" />
-                <element signature="e#10411#11105#0" />
-                <element signature="e#10449#11105#0" />
-                <element signature="e#10462#10780#0" />
                 <element signature="e#10648#10760#0" />
                 <element signature="e#10786#11028#0" />
                 <element signature="e#10810#10849#0" />
-                <element signature="e#11218#13323#0" />
                 <element signature="e#11252#11434#0" />
                 <element signature="e#11467#11701#0" />
                 <element signature="e#11834#12664#0" />
@@ -269,7 +297,6 @@
                 <element signature="e#12694#12712#0" />
                 <element signature="e#12755#12803#0" />
                 <element signature="e#12862#12918#0" />
-                <element signature="e#12924#13321#0" />
                 <element signature="e#12997#13226#0" />
                 <element signature="e#13127#13153#0" />
                 <element signature="e#13232#13285#0" />
@@ -285,7 +312,6 @@
                 <element signature="e#15118#15212#0" />
                 <element signature="e#15268#15321#0" />
                 <element signature="e#15358#15505#0" />
-                <element signature="e#15531#15564#0" />
                 <element signature="e#15612#15805#0" />
                 <element signature="e#15770#15801#0" />
                 <element signature="e#15842#16272#0" />
@@ -297,8 +323,6 @@
                 <element signature="e#16421#16583#0" />
                 <element signature="e#16487#16566#0" />
                 <element signature="e#16626#16879#0" />
-                <element signature="e#16697#16722#0" />
-                <element signature="e#16728#16740#0" />
                 <element signature="e#16767#16861#0" />
               </folding>
             </state>
@@ -316,7 +340,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>HEYHEY</find>
       <find>checkNoLeader</find>
       <find>for</find>
       <find>commitIndex</find>
@@ -329,14 +352,14 @@
       <find>AppendEntriesArgs{</find>
       <find>rf.commitTerm</find>
       <find>process</find>
-      <find />
+      <find>rf.applyCh &lt;- sendApplyMsg</find>
       <find>%!</find>
       <find>i</find>
-      <find />
+      <find>apply error:</find>
       <find>reply.Success</find>
       <find>broadcastAppendEntries</find>
-      <find />
-      <find />
+      <find>from follower [2</find>
+      <find>from follower [2]</find>
       <find>ReadRaftState</find>
       <find>lastApplied</find>
       <find>Logs</find>
@@ -346,6 +369,7 @@
       <find>from</find>
       <find>readPersist</find>
       <find>CommitTerm</find>
+      <find>成为leader</find>
     </findStrings>
     <replaceStrings>
       <replace>CurrentTerm</replace>
@@ -438,7 +462,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.TestUnreliableAgree in raft">
+  <component name="RunManager" selected="Go Test.TestFigure8Unreliable in raft">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="raft" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -530,57 +554,57 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestFigure8Unreliable in raft" />
         <item itemvalue="Go Test.TestUnreliableAgree in raft" />
         <item itemvalue="Go Test.TestUnreliableChurn in raft" />
         <item itemvalue="Go Test.TestReliableChurn in raft" />
-        <item itemvalue="Go Test.TestFigure8Unreliable in raft" />
         <item itemvalue="Go Test.TestFigure8 in raft" />
       </list>
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="TestFigure8_in_raft - 2018.08.03 at 21h 44m 31s.xml">
-      <configuration name="TestFigure8 in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestFigure8_in_raft - 2018.08.03 at 21h 45m 11s.xml">
-      <configuration name="TestFigure8 in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestUnreliableAgree_in_raft - 2018.08.03 at 21h 45m 36s.xml">
-      <configuration name="TestUnreliableAgree in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestUnreliableAgree_in_raft - 2018.08.03 at 21h 46m 13s.xml">
-      <configuration name="TestUnreliableAgree in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestUnreliableAgree_in_raft - 2018.08.03 at 21h 46m 41s.xml">
-      <configuration name="TestUnreliableAgree in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.03 at 21h 47m 37s.xml">
-      <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.03 at 21h 48m 29s.xml">
-      <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.03 at 21h 49m 37s.xml">
-      <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="TestReliableChurn_in_raft - 2018.08.03 at 21h 50m 10s.xml">
       <configuration name="TestReliableChurn in raft" configurationId="GoTestRunConfiguration" />
     </history-entry>
     <history-entry file="TestReliableChurn_in_raft - 2018.08.03 at 21h 50m 55s.xml">
       <configuration name="TestReliableChurn in raft" configurationId="GoTestRunConfiguration" />
     </history-entry>
+    <history-entry file="TestReliableChurn_in_raft - 2018.08.03 at 21h 51m 31s.xml">
+      <configuration name="TestReliableChurn in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestUnreliableChurn_in_raft - 2018.08.03 at 21h 52m 02s.xml">
+      <configuration name="TestUnreliableChurn in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestUnreliableChurn_in_raft - 2018.08.03 at 21h 52m 36s.xml">
+      <configuration name="TestUnreliableChurn in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestUnreliableChurn_in_raft - 2018.08.03 at 21h 53m 00s.xml">
+      <configuration name="TestUnreliableChurn in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestUnreliableAgree_in_raft - 2018.08.03 at 21h 53m 39s.xml">
+      <configuration name="TestUnreliableAgree in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.03 at 21h 57m 10s.xml">
+      <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.03 at 21h 58m 44s.xml">
+      <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.03 at 22h 02m 35s.xml">
+      <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="-7" y="0" width="960" height="1047" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.1641791" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.23333333" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50053304" side_tool="true" weight="0.27056277" />
       <window_info anchor="right" id="Database" order="3" weight="0.32932165" />
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49946696" visible="true" weight="0.4426407" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49946696" visible="true" weight="0.0" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.23387977" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -610,7 +634,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/raft.go</url>
-          <line>265</line>
+          <line>266</line>
           <option name="timeStamp" value="43" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
@@ -710,28 +734,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -743,7 +758,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -759,7 +773,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -771,8 +784,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
@@ -989,28 +1000,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -1022,7 +1024,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -1038,7 +1039,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -1050,8 +1050,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
@@ -1479,28 +1477,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -1512,7 +1501,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -1528,7 +1516,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -1540,8 +1527,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
@@ -1617,28 +1602,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -1650,7 +1626,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -1666,7 +1641,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -1678,8 +1652,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
@@ -2092,28 +2064,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -2125,7 +2088,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -2141,7 +2103,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -2153,8 +2114,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
@@ -2554,28 +2513,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -2587,7 +2537,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -2603,7 +2552,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -2615,8 +2563,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
@@ -2692,28 +2638,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -2725,7 +2662,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -2741,7 +2677,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -2753,8 +2688,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
@@ -3107,8 +3040,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="73">
-          <caret line="577" column="1" lean-forward="true" selection-start-line="577" selection-start-column="1" selection-end-line="577" selection-end-column="1" />
+        <state relative-caret-position="691">
+          <caret line="721" column="24" selection-start-line="721" selection-start-column="5" selection-end-line="721" selection-end-column="24" />
           <folding>
             <element signature="e#830#1280#0" />
             <element signature="e#1316#2521#0" />
@@ -3135,8 +3068,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/raft.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="111">
-          <caret line="529" column="13" selection-start-line="529" selection-start-column="13" selection-end-line="529" selection-end-column="13" />
+        <state relative-caret-position="509">
+          <caret line="579" column="16" lean-forward="true" selection-start-line="579" selection-start-column="16" selection-end-line="579" selection-end-column="16" />
           <folding>
             <element signature="e#14#16#0" />
             <element signature="e#680#697#0" />
@@ -3175,28 +3108,19 @@
             <element signature="e#6594#6791#0" />
             <element signature="e#6891#6935#0" />
             <element signature="e#6954#6956#0" />
-            <element signature="e#7615#8002#0" />
             <element signature="e#7718#7772#0" />
             <element signature="e#7792#7832#0" />
             <element signature="e#8004#8006#0" />
             <element signature="e#8246#8281#0" />
             <element signature="e#8283#8285#0" />
-            <element signature="e#8929#11135#0" />
-            <element signature="e#9607#11117#0" />
-            <element signature="e#9701#11114#0" />
-            <element signature="e#9706#11110#0" />
             <element signature="e#9727#10269#0" />
             <element signature="e#9746#10269#0" />
             <element signature="e#9759#10213#0" />
             <element signature="e#10105#10111#0" />
             <element signature="e#10274#10406#0" />
-            <element signature="e#10411#11105#0" />
-            <element signature="e#10449#11105#0" />
-            <element signature="e#10462#10780#0" />
             <element signature="e#10648#10760#0" />
             <element signature="e#10786#11028#0" />
             <element signature="e#10810#10849#0" />
-            <element signature="e#11218#13323#0" />
             <element signature="e#11252#11434#0" />
             <element signature="e#11467#11701#0" />
             <element signature="e#11834#12664#0" />
@@ -3208,7 +3132,6 @@
             <element signature="e#12694#12712#0" />
             <element signature="e#12755#12803#0" />
             <element signature="e#12862#12918#0" />
-            <element signature="e#12924#13321#0" />
             <element signature="e#12997#13226#0" />
             <element signature="e#13127#13153#0" />
             <element signature="e#13232#13285#0" />
@@ -3224,7 +3147,6 @@
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
             <element signature="e#15358#15505#0" />
-            <element signature="e#15531#15564#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -3236,8 +3158,6 @@
             <element signature="e#16421#16583#0" />
             <element signature="e#16487#16566#0" />
             <element signature="e#16626#16879#0" />
-            <element signature="e#16697#16722#0" />
-            <element signature="e#16728#16740#0" />
             <element signature="e#16767#16861#0" />
           </folding>
         </state>
