@@ -233,8 +233,8 @@
       <file leaf-file-name="raft.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/raft.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="509">
-              <caret line="579" column="16" lean-forward="true" selection-start-line="579" selection-start-column="16" selection-end-line="579" selection-end-column="16" />
+            <state relative-caret-position="495">
+              <caret line="579" column="16" selection-start-line="579" selection-start-column="16" selection-end-line="579" selection-end-column="16" />
               <folding>
                 <element signature="e#14#16#0" />
                 <element signature="e#680#697#0" />
@@ -311,7 +311,6 @@
                 <element signature="e#14990#15090#0" />
                 <element signature="e#15118#15212#0" />
                 <element signature="e#15268#15321#0" />
-                <element signature="e#15358#15505#0" />
                 <element signature="e#15612#15805#0" />
                 <element signature="e#15770#15801#0" />
                 <element signature="e#15842#16272#0" />
@@ -772,7 +771,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -1038,7 +1036,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -1515,7 +1512,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -1640,7 +1636,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -2102,7 +2097,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -2551,7 +2545,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -2676,7 +2669,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
@@ -3068,8 +3060,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/raft.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="509">
-          <caret line="579" column="16" lean-forward="true" selection-start-line="579" selection-start-column="16" selection-end-line="579" selection-end-column="16" />
+        <state relative-caret-position="495">
+          <caret line="579" column="16" selection-start-line="579" selection-start-column="16" selection-end-line="579" selection-end-column="16" />
           <folding>
             <element signature="e#14#16#0" />
             <element signature="e#680#697#0" />
@@ -3146,7 +3138,6 @@
             <element signature="e#14990#15090#0" />
             <element signature="e#15118#15212#0" />
             <element signature="e#15268#15321#0" />
-            <element signature="e#15358#15505#0" />
             <element signature="e#15612#15805#0" />
             <element signature="e#15770#15801#0" />
             <element signature="e#15842#16272#0" />
