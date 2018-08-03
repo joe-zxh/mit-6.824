@@ -438,7 +438,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.TestUnreliableChurn in raft">
+  <component name="RunManager" selected="Go Test.TestUnreliableAgree in raft">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="raft" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -530,10 +530,10 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestUnreliableAgree in raft" />
         <item itemvalue="Go Test.TestUnreliableChurn in raft" />
         <item itemvalue="Go Test.TestReliableChurn in raft" />
         <item itemvalue="Go Test.TestFigure8Unreliable in raft" />
-        <item itemvalue="Go Test.TestUnreliableAgree in raft" />
         <item itemvalue="Go Test.TestFigure8 in raft" />
       </list>
     </recent_temporary>
