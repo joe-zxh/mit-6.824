@@ -515,8 +515,10 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 			ind:=args.Entries.Index
 			rf.logAppendNum[ind]++
 
-			for i:=rf.CommitIndex+1; i<len(rf.Logs); i++ { //保证后面的项commit之前，前面的项都commit了
-				if (rf.logAppendNum[i]>len(rf.peers)/2) {
+
+			if (rf.logAppendNum[ind]>len(rf.peers)/2  && ind > rf.CommitIndex && rf.Logs[ind].Term==rf.CurrentTerm) { // 那么把 ind之前的项都commit掉
+
+				for i:=rf.CommitIndex+1;i<=ind;i++ {
 					rf.CommitIndex = i
 					rf.CommitTerm = rf.Logs[i].Term
 					fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
@@ -524,8 +526,6 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 					rf.persist()
 					sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
 					rf.applyCh <- sendApplyMsg
-				} else {
-					break
 				}
 			}
 		}
