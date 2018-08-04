@@ -307,8 +307,8 @@
     <findStrings>
       <find>reply.Success</find>
       <find>broadcastAppendEntries</find>
-      <find />
-      <find />
+      <find>from follower [2</find>
+      <find>from follower [2]</find>
       <find>ReadRaftState</find>
       <find>lastApplied</find>
       <find>Logs</find>
@@ -317,8 +317,8 @@
       <find>printLog</find>
       <find>CommitTerm</find>
       <find>成为leader</find>
-      <find />
-      <find />
+      <find>committed values do not match</find>
+      <find>apply error:</find>
       <find>nextIndex</find>
       <find>term</find>
       <find>readPersist</find>
@@ -331,7 +331,7 @@
       <find>from</find>
       <find>matchIndex</find>
       <find>104996577463343156</find>
-      <find />
+      <find>high index</find>
       <find>highIndex</find>
       <find>213773139355083940</find>
       <find>347529352712585367</find>
