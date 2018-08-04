@@ -342,8 +342,8 @@ func (cfg *config) nCommitted(index int) (int, interface{}) {
 
 		if ok {
 			if count > 0 && cmd != cmd1 { //这个第一次的时候 cmd确实是不等于cmd1, 但count=0所以跳过了这个判断的语句
-				cfg.t.Fatalf("committed values do not match: index %v, %v, %v\n",
-					index, cmd, cmd1)
+				cfg.t.Fatalf("committed values do not match: index %v, %v, %v, %d\n",
+					index, cmd, cmd1, i)
 			}
 			count += 1
 			cmd = cmd1
