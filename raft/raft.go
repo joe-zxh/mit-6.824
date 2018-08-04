@@ -89,7 +89,7 @@ type Raft struct { // 要保存的量 的首字母要 变成大写
 	voteReplyOkCount int // 收到有效回复的总数
 	voteReplyCount int // 收到回复的总数
 
-	logAppendNum map[int]int // 已经append了这条索引为index的日志项的节点的个数
+	LogAppendNum map[int]int // 已经append了这条索引为index的日志项的节点的个数
 
 	applyCh chan ApplyMsg
 }
@@ -129,6 +129,7 @@ func (rf *Raft) persist() {
 	e.Encode(rf.CommitIndex)
 	e.Encode(rf.CommitTerm)
 	e.Encode(rf.LastApplied)
+	e.Encode(rf.LogAppendNum)
 	data := w.Bytes()
 	rf.persister.SaveRaftState(data)
 
@@ -156,6 +157,7 @@ func (rf *Raft) readPersist(data []byte) {
 	d.Decode(&rf.CommitIndex)
 	d.Decode(&rf.CommitTerm)
 	d.Decode(&rf.LastApplied)
+	d.Decode(&rf.LogAppendNum)
 
 	// Example:
 	// r := bytes.NewBuffer(data)
@@ -298,7 +300,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	appendEntry:=Entry{rf.CurrentTerm, len(rf.Logs), command }
 
 	rf.Logs = append(rf.Logs, appendEntry)
-	rf.logAppendNum[len(rf.Logs)-1] = 1 //初始化为1
+	rf.LogAppendNum[len(rf.Logs)-1] = 1 //初始化为1
 
 	rf.persist()
 	printLogEnd(rf)
@@ -340,7 +342,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.CurrentTerm = 0
 	rf.VotedFor = -1
 	rf.Logs = make([]Entry,1) // 为了从1开始索引，在index=0的位置加了一个空的日志项
-	rf.logAppendNum = make(map[int]int)
+	rf.LogAppendNum = make(map[int]int)
 
 	rf.CommitIndex = 0 //根据论文里面的图，都是从1开始计数的
 	rf.CommitTerm = 0
@@ -386,6 +388,13 @@ func Make(peers []*labrpc.ClientEnd, me int,
 				case <-rf.beLeader:
 					rf.mu.Lock()
 					rf.status = LEADER
+
+					for i:=rf.CommitIndex+1;i< len(rf.Logs);i++ {
+						if n, ok:=rf.LogAppendNum[i]; !ok || n<1  { //如果这一项不存在，要初始化为1
+							rf.LogAppendNum[i] = 1
+						}
+					}
+
 					fmt.Printf("节点[%d]成为leader, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
 
 					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
@@ -513,10 +522,11 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 			rf.nextIndex[server] = rf.matchIndex[server]+1
 
 			ind:=args.Entries.Index
-			rf.logAppendNum[ind]++
+			rf.LogAppendNum[ind]++
+			rf.persist()
 
 
-			if (rf.logAppendNum[ind]>len(rf.peers)/2  && ind > rf.CommitIndex && rf.Logs[ind].Term==rf.CurrentTerm) { // 那么把 ind之前的项都commit掉
+			if (rf.LogAppendNum[ind]>len(rf.peers)/2  && ind > rf.CommitIndex && rf.Logs[ind].Term==rf.CurrentTerm) { // 那么把 ind之前的项都commit掉
 
 				for i:=rf.CommitIndex+1;i<=ind;i++ {
 					rf.CommitIndex = i
