@@ -677,8 +677,7 @@ func TestFigure8(t *testing.T) {
 		leader := -1
 		for i := 0; i < servers; i++ {
 			if cfg.rafts[i] != nil {
-				_, _, ok := cfg.rafts[i].Start(i+1)
-				//_, _, ok := cfg.rafts[i].Start(rand.Int())
+				_, _, ok := cfg.rafts[i].Start(rand.Int())
 				if ok {
 					leader = i
 				}

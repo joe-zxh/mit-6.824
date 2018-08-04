@@ -32,7 +32,7 @@ import (
 
 const HEARTBEAT_TIME int = 50 // leader50ms发送一次心跳
 
-const PRINTNUM int = 36 // 打印最后10条日志项
+const PRINTNUM int = 10 // 打印最后10条日志项
 
 // 这个是用来测试用的 在config.go里面的start1()里面有个go func()检查
 // as(尽管) each Raft peer becomes aware that successive log entries are
@@ -93,10 +93,6 @@ type Raft struct { // 要保存的量 的首字母要 变成大写
 	logAppendNum map[int]int // 已经append了这条索引为index的日志项的节点的个数
 
 	applyCh chan ApplyMsg
-
-	//joe
-	highIndex int // 和CommitIndex对应的量，它是为了无法达成一致的问题(在sendAppendEntries中使用到)。初始化为CommitIndex。它在执行的过程中 highIndex>=CommitIndex
-
 }
 
 type Entry struct { //因为要进行RPC通讯，所以要大写
@@ -360,7 +356,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
-	rf.highIndex = rf.CommitIndex
 
 	printLogEnd(rf, PRINTNUM)
 
@@ -392,15 +387,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 				case <-rf.beLeader:
 					rf.mu.Lock()
 					rf.status = LEADER
-					rf.highIndex = rf.CommitIndex
 					fmt.Printf("节点[%d]成为leader, 时间: %v, 当前任期: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
-
-
-					//for i:=rf.CommitIndex+1;i< len(rf.Logs);i++ { //要重置一下logAppendNum
-					//	if(rf.logAppendNum[i]!=1) {
-					//		rf.logAppendNum[i] = 1
-					//	}
-					//}
 
 					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
 						rf.nextIndex[i] = len(rf.Logs)
@@ -524,16 +511,15 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 	if (reply.Success) {
 		if (args.Entries.Index!=-1) { //不是心跳
 			rf.matchIndex[server] = args.Entries.Index
-			rf.nextIndex[server] = rf.matchIndex[server]+1 //这里nextIndex是根据matchIndex来递增的，所以不需要重置nextIndex了
+			rf.nextIndex[server] = rf.matchIndex[server]+1
 
 			ind:=args.Entries.Index
 			rf.logAppendNum[ind]++
 
-			if (ind > rf.CommitIndex && rf.logAppendNum[ind]>len(rf.peers)/2  && rf.Logs[ind].Term==rf.CurrentTerm) { // 如果符合条件，那么重置一下highIndex
-				i:=rf.CommitIndex+1
 
-				for ;i<=rf.CommitIndex;i++ {
+			if (rf.logAppendNum[ind]>len(rf.peers)/2  && ind > rf.CommitIndex && rf.Logs[ind].Term==rf.CurrentTerm) { // 那么把 ind之前的项都commit掉
 
+				for i:=rf.CommitIndex+1;i<=ind;i++ {
 					rf.CommitIndex = i
 					rf.CommitTerm = rf.Logs[i].Term
 					fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
@@ -541,71 +527,8 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 					rf.persist()
 					sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
 					rf.applyCh <- sendApplyMsg
-
-					if (rf.logAppendNum[i]>len(rf.peers)/2) {
-						rf.CommitIndex = i
-						rf.CommitTerm = rf.Logs[i].Term
-						fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
-
-						rf.persist()
-						sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
-						rf.applyCh <- sendApplyMsg
-
-					} else {
-						fmt.Printf("rf.logAppendNum[i]:%d\n", rf.logAppendNum[i])
-						break;
-					}
 				}
 			}
-
-			if (rf.highIndex>rf.CommitIndex) { // 那么把 highIndex之前的 符合条件的 项都commit掉
-
-				i:=rf.CommitIndex+1
-
-				for ;i<=rf.highIndex;i++ {
-
-					if (rf.logAppendNum[i]>len(rf.peers)/2) {
-						rf.CommitIndex = i
-						rf.CommitTerm = rf.Logs[i].Term
-						fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
-
-						rf.persist()
-						sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
-						rf.applyCh <- sendApplyMsg
-
-					} else {
-						fmt.Printf("rf.logAppendNum[i]:%d\n", rf.logAppendNum[i])
-						break;
-					}
-				}
-			}
-
-			//if (ind > rf.CommitIndex && ind > rf.highIndex && rf.logAppendNum[ind]>len(rf.peers)/2  && rf.Logs[ind].Term==rf.CurrentTerm) { // 如果符合条件，那么重置一下highIndex
-			//	rf.highIndex = ind
-			//	fmt.Printf("from leader [%d] : highIndex:%d  CommitIndex:%d\n", rf.me, rf.highIndex, rf.CommitIndex)
-			//}
-			//
-			//if (rf.highIndex>rf.CommitIndex) { // 那么把 highIndex之前的 符合条件的 项都commit掉
-			//
-			//	i:=rf.CommitIndex+1
-			//
-			//	for ;i<=rf.highIndex;i++ {
-			//
-			//		if (rf.logAppendNum[i]>len(rf.peers)/2) {
-			//			rf.CommitIndex = i
-			//			rf.CommitTerm = rf.Logs[i].Term
-			//			fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
-			//
-			//			rf.persist()
-			//			sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
-			//			rf.applyCh <- sendApplyMsg
-			//
-			//		} else {
-			//			fmt.Printf("rf.logAppendNum[i]:%d\n", rf.logAppendNum[i])
-			//			break;
-			//		}
-			//	}
-			//}
 		}
 	} else {
 		if (rf.nextIndex[server]>1) {
