@@ -449,26 +449,23 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 		oldCommitIndex:=rf.CommitIndex//这个是为了通过测试用的, 测试要求：commit的顺序要逐个逐个递增(但其实只需要递增即可，不需要逐个逐个来)
 
-		newCommitIndex:=-1
-
-		//if (args.LeaderCommitIndex > len(rf.Logs)-1) {
-		//	newCommitIndex = len(rf.Logs)-1
-		//} else
-		// 这边的话，leader发来的index值一定要<=当前节点的index才行，不然无法保证当前节点是否和leader拥有在commitIndex处拥有相同的日志项
-		if (args.LeaderCommitIndex <= len(rf.Logs)-1&&args.LeaderCommitTerm==rf.Logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
-			newCommitIndex = args.LeaderCommitIndex
+		if (args.LeaderCommitIndex<=args.FollowerMatchIndex) {
+			rf.CommitIndex = args.LeaderCommitIndex
+		} else {
+			rf.CommitIndex = args.FollowerMatchIndex
 		}
 
-		if (newCommitIndex!=-1){
-			rf.CommitIndex = newCommitIndex
-			for i:=oldCommitIndex+1;i<=rf.CommitIndex;i++{
-				sendApplyMsg:=ApplyMsg{i, rf.Logs[i].Command, false, []byte{}}
-				rf.applyCh <- sendApplyMsg
-			}
-
-			rf.persist()
-			fmt.Printf("from follower [%d] : CommitIndex: %d\n", rf.me, rf.CommitIndex)
+		for i:=oldCommitIndex+1;i<=rf.CommitIndex;i++{
+			sendApplyMsg:=ApplyMsg{i, rf.Logs[i].Command, false, []byte{}}
+			rf.applyCh <- sendApplyMsg
 		}
+
+		rf.persist()
+		fmt.Printf("from follower [%d] : CommitIndex: %d\n", rf.me, rf.CommitIndex)
+
+		//if (args.LeaderCommitIndex <= len(rf.Logs)-1&&args.LeaderCommitTerm==rf.Logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
+		//	newCommitIndex = args.LeaderCommitIndex
+		//}
 	}
 
 	if (args.Entries.Index==-1){ //心跳
@@ -565,7 +562,7 @@ func broadcastAppendEntries(rf *Raft) {
 				entrySend.Index=-1 //index=-1表示是心跳
 			}
 
-			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.CommitIndex, rf.CommitTerm}
+			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
 			reply:=AppendEntriesReply{}
 
 			go func(server int) {
@@ -583,6 +580,8 @@ type AppendEntriesArgs struct{
 	Entries Entry // index设为-1时 表示心跳
 	LeaderCommitIndex int
 	LeaderCommitTerm int
+
+	FollowerMatchIndex int //新加的
 }
 
 type AppendEntriesReply struct{
