@@ -32,6 +32,7 @@ import (
 
 const HEARTBEAT_TIME int = 50 // leader50ms发送一次心跳
 
+const PRINTLOGNUM int = 35 // 打印的条数
 
 // 这个是用来测试用的 在config.go里面的start1()里面有个go func()检查
 // as(尽管) each Raft peer becomes aware that successive log entries are
@@ -303,7 +304,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.LogAppendNum[len(rf.Logs)-1] = 1 //初始化为1
 
 	rf.persist()
-	printLogEnd(rf)
+	printLogEnd(rf, PRINTLOGNUM)
 
 	return len(rf.Logs)-1, rf.CurrentTerm, isLeader
 }
@@ -358,7 +359,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
-	printLogEnd(rf)
+	printLogEnd(rf, PRINTLOGNUM)
 
 	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
 		for{
@@ -493,7 +494,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 			rf.Logs = append(rf.Logs, args.Entries) //添加
 		}
 		rf.persist()
-		printLogEnd(rf)
+		printLogEnd(rf, PRINTLOGNUM)
 	}
 }
 
@@ -636,12 +637,12 @@ func printLog(rf *Raft) {
 }
 
 // 只打印最后5条日志项
-func printLogEnd(rf *Raft) {
+func printLogEnd(rf *Raft, num int) {
 	fmt.Printf("server[%d]: ", rf.me)
 
 	var i int
-	if (len(rf.Logs)>=6) {
-		i = len(rf.Logs)-6
+	if (len(rf.Logs)>=(num+1)) {
+		i = len(rf.Logs)-(num+1)
 	} else {
 		i = 0
 	}
