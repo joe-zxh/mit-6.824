@@ -33,7 +33,7 @@ func MapFunc(file string, value string) (res []KeyValue) {
 	return
 }
 
-// Just return key
+// Just return key value是空的""
 func ReduceFunc(key string, values []string) string {
 	for _, e := range values {
 		debug("Reduce %s %v\n", key, e)
@@ -137,9 +137,19 @@ func setup() *Master {
 }
 
 func cleanup(mr *Master) {
-	mr.CleanupFiles()
-	for _, f := range mr.files {
+	mr.CleanupFiles() //删除 中间产生的临时文件
+	for _, f := range mr.files { //删除 一开始随机产生的 输入文件
 		removeFile(f)
+	}
+}
+
+func TestJoe(t *testing.T) {
+
+	a:=[]string{"Joe", "Hey"}
+
+	for i, e := range a {
+		fmt.Println(i)
+		fmt.Println(e)
 	}
 }
 

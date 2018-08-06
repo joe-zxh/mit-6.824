@@ -76,7 +76,7 @@
       <file leaf-file-name="config.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
+            <state relative-caret-position="2869">
               <caret line="344" column="59" selection-start-line="344" selection-start-column="59" selection-end-line="344" selection-end-column="59" />
               <folding>
                 <element signature="e#456#556#0" />
@@ -140,10 +140,11 @@
       <file leaf-file-name="test_test.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="451">
-              <caret line="943" column="32" selection-start-line="943" selection-start-column="32" selection-end-line="943" selection-end-column="32" />
+            <state relative-caret-position="494">
+              <caret line="149" column="9" lean-forward="true" selection-start-line="149" selection-start-column="9" selection-end-line="149" selection-end-column="9" />
               <folding>
                 <element signature="n#!!block;n#TestJoe#0" />
+                <element signature="n#!!block;n#TestInitialElection#0" />
                 <element signature="n#!!block;n#TestReElection#0" />
                 <element signature="n#!!block;n#TestBasicAgree#0" />
                 <element signature="n#!!block;n#TestFailAgree#0" />
@@ -169,12 +170,8 @@
       <file leaf-file-name="raft.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/raft.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4611">
-              <caret line="391" selection-start-line="391" selection-end-line="391" />
-              <folding>
-                <element signature="e#14#16#0" />
-                <element signature="e#680#697#0" />
-              </folding>
+            <state relative-caret-position="280">
+              <caret line="551" column="26" selection-start-line="551" selection-start-column="26" selection-end-line="551" selection-end-column="26" />
             </state>
           </provider>
         </entry>
@@ -190,7 +187,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>for</find>
       <find>commitIndex</find>
       <find>logs</find>
       <find>sendApplyMsg</find>
@@ -220,6 +216,7 @@
       <find>成为leader</find>
       <find>broadcastAppendEntries</find>
       <find>FollowerMatchIndex</find>
+      <find>for</find>
     </findStrings>
     <replaceStrings>
       <replace>CurrentTerm</replace>
@@ -256,9 +253,9 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="1">
     <option name="x" value="-7" />
-    <option name="width" value="960" />
+    <option name="width" value="974" />
     <option name="height" value="1047" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -268,24 +265,7 @@
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="raft" type="b2602c69:ProjectViewProjectNode" />
-              <item name="raft" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="raft" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope" />
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
     <property name="DefaultGoTemplateProperty" value="Go File" />
@@ -294,10 +274,10 @@
     <property name="configurable.Project.GOPATH.is.expanded" value="true" />
     <property name="go.gopath.indexing.explicitly.defined" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
-    <property name="last_opened_file_path" value="E:/githubClone/braft-master/labrpc/test_test.go" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../mapreduce" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
+    <property name="settings.editor.selected.configurable" value="com.goide.configuration.GoLibrariesConfigurableProvider" />
     <property name="two.files.diff.last.used.file" value="E:/githubClone/braft-master/labrpc/test_test.go" />
   </component>
   <component name="RunDashboard">
@@ -312,7 +292,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.TestUnreliableChurn in raft">
+  <component name="RunManager" selected="Go Test.TestJoe in raft">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="raft" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -320,17 +300,6 @@
       <kind value="FILE" />
       <filePath value="$PROJECT_DIR$/" />
       <directory value="$PROJECT_DIR$/" />
-    </configuration>
-    <configuration name="TestFigure8 in raft" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="raft" />
-      <working_directory value="$PROJECT_DIR$" />
-      <go_parameters value="-i" />
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="raft" />
-      <directory value="$PROJECT_DIR$/" />
-      <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^TestFigure8$" />
     </configuration>
     <configuration name="TestFigure8Unreliable in raft" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="raft" />
@@ -342,6 +311,17 @@
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
       <pattern value="^TestFigure8Unreliable$" />
+    </configuration>
+    <configuration name="TestJoe in raft" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="raft" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-i" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="raft" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <pattern value="^TestJoe$" />
     </configuration>
     <configuration name="TestReliableChurn in raft" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="raft" />
@@ -396,29 +376,23 @@
     </configuration>
     <list>
       <item itemvalue="Go Test.goTestAll" />
-      <item itemvalue="Go Test.TestFigure8 in raft" />
       <item itemvalue="Go Test.TestUnreliableAgree in raft" />
       <item itemvalue="Go Test.TestFigure8Unreliable in raft" />
       <item itemvalue="Go Test.TestReliableChurn in raft" />
       <item itemvalue="Go Test.TestUnreliableChurn in raft" />
+      <item itemvalue="Go Test.TestJoe in raft" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestJoe in raft" />
         <item itemvalue="Go Test.TestUnreliableChurn in raft" />
         <item itemvalue="Go Test.TestFigure8Unreliable in raft" />
         <item itemvalue="Go Test.TestReliableChurn in raft" />
         <item itemvalue="Go Test.TestUnreliableAgree in raft" />
-        <item itemvalue="Go Test.TestFigure8 in raft" />
       </list>
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="TestUnreliableAgree_in_raft - 2018.08.04 at 11h 23m 46s.xml">
-      <configuration name="TestUnreliableAgree in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestReliableChurn_in_raft - 2018.08.04 at 11h 24m 40s.xml">
-      <configuration name="TestReliableChurn in raft" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.04 at 11h 27m 22s.xml">
       <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
     </history-entry>
@@ -443,40 +417,35 @@
     <history-entry file="TestFigure8Unreliable_in_raft - 2018.08.04 at 11h 32m 06s.xml">
       <configuration name="TestFigure8Unreliable in raft" configurationId="GoTestRunConfiguration" />
     </history-entry>
+    <history-entry file="TestUnreliableChurn_in_raft - 2018.08.04 at 17h 05m 48s.xml">
+      <configuration name="TestUnreliableChurn in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestJoe_in_raft - 2018.08.05 at 15h 24m 54s.xml">
+      <configuration name="TestJoe in raft" configurationId="GoTestRunConfiguration" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-7" y="0" width="960" height="1047" extended-state="1" />
+    <frame x="-7" y="0" width="974" height="1047" extended-state="1" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26555556" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.23333333" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50053304" side_tool="true" weight="0.27056277" />
       <window_info anchor="right" id="Database" order="3" weight="0.32932165" />
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49946696" visible="true" weight="0.3092896" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49946696" weight="0.30382514" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.23387977" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.36612022" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.24891774" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info content_ui="combo" id="Project" order="0" weight="0.23333333" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49946696" visible="true" weight="0.0" />
-      <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
-      <window_info anchor="right" id="Database" order="3" weight="0.32932165" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50053304" side_tool="true" weight="0.27056277" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.24891774" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.23387977" />
-      <window_info id="Favorites" order="2" side_tool="true" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -557,10 +526,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6118">
           <caret line="330" column="55" selection-start-line="330" selection-start-column="55" selection-end-line="330" selection-end-column="55" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -577,6 +542,7 @@
           <caret line="624" lean-forward="true" selection-start-line="624" selection-end-line="624" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -710,10 +676,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2375">
           <caret line="275" column="4" selection-start-line="275" selection-start-column="6" selection-end-line="286" selection-end-column="7" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -723,6 +685,7 @@
           <caret line="403" column="14" selection-start-line="403" selection-start-column="5" selection-end-line="403" selection-end-column="14" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -750,6 +713,7 @@
           <caret line="39" column="32" lean-forward="true" selection-start-line="39" selection-start-column="32" selection-end-line="39" selection-end-column="32" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -885,6 +849,7 @@
           <caret line="12" column="13" lean-forward="true" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1020,6 +985,7 @@
           <caret line="21" column="24" selection-start-line="21" selection-start-column="5" selection-end-line="21" selection-end-column="24" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1045,10 +1011,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1368">
           <caret line="73" column="27" selection-start-line="73" selection-start-column="26" selection-end-line="73" selection-end-column="27" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1058,6 +1020,7 @@
           <caret line="21" column="24" selection-start-line="21" selection-start-column="5" selection-end-line="21" selection-end-column="24" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1083,10 +1046,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1387">
           <caret line="73" column="27" selection-start-line="73" selection-start-column="26" selection-end-line="73" selection-end-column="27" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1253,6 +1212,7 @@
           <caret line="86" column="32" selection-start-line="86" selection-start-column="32" selection-end-line="86" selection-end-column="32" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1278,10 +1238,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="182">
           <caret line="485" column="1" selection-start-line="485" selection-start-column="1" selection-end-line="485" selection-end-column="1" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1291,6 +1247,7 @@
           <caret line="39" column="32" lean-forward="true" selection-start-line="39" selection-start-column="32" selection-end-line="39" selection-end-column="32" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1426,6 +1383,7 @@
           <caret line="12" column="13" lean-forward="true" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1561,6 +1519,7 @@
           <caret line="21" column="24" selection-start-line="21" selection-start-column="5" selection-end-line="21" selection-end-column="24" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1586,10 +1545,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1368">
           <caret line="73" column="27" selection-start-line="73" selection-start-column="26" selection-end-line="73" selection-end-column="27" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1599,6 +1554,7 @@
           <caret line="21" column="24" selection-start-line="21" selection-start-column="5" selection-end-line="21" selection-end-column="24" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
@@ -1624,10 +1580,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1387">
           <caret line="73" column="27" selection-start-line="73" selection-start-column="26" selection-end-line="73" selection-end-column="27" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1729,7 +1681,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/config.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
+        <state relative-caret-position="2869">
           <caret line="344" column="59" selection-start-line="344" selection-start-column="59" selection-end-line="344" selection-end-column="59" />
           <folding>
             <element signature="e#456#556#0" />
@@ -1798,21 +1750,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/raft.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4611">
-          <caret line="391" selection-start-line="391" selection-end-line="391" />
-          <folding>
-            <element signature="e#14#16#0" />
-            <element signature="e#680#697#0" />
-          </folding>
+        <state relative-caret-position="280">
+          <caret line="551" column="26" selection-start-line="551" selection-start-column="26" selection-end-line="551" selection-end-column="26" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="451">
-          <caret line="943" column="32" selection-start-line="943" selection-start-column="32" selection-end-line="943" selection-end-column="32" />
+        <state relative-caret-position="494">
+          <caret line="149" column="9" lean-forward="true" selection-start-line="149" selection-start-column="9" selection-end-line="149" selection-end-column="9" />
           <folding>
             <element signature="n#!!block;n#TestJoe#0" />
+            <element signature="n#!!block;n#TestInitialElection#0" />
             <element signature="n#!!block;n#TestReElection#0" />
             <element signature="n#!!block;n#TestBasicAgree#0" />
             <element signature="n#!!block;n#TestFailAgree#0" />
