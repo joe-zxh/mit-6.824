@@ -21,14 +21,15 @@ func doMap(
 
 	f, err:=os.Open(inFile)
 	if (err!=nil) {
-		fmt.Print(err)
+		fmt.Println(err)
+
 	}
 	defer f.Close()
 
 	b, err:=ioutil.ReadAll(f)
 
 	if (err!=nil) {
-		fmt.Print(err)
+		fmt.Println(err)
 	}
 
 	mapOutput:=mapF(inFile, string(b)) //返回的是[]KeyValue, key是key，value是空的""。

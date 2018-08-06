@@ -83,7 +83,7 @@ func RunWorker(MasterAddress string, me string,
 	wk.l = l
 	wk.register(MasterAddress)
 
-	// DON'T MODIFY CODE BELOW
+	// DON'T MODIFY CODE BELOW 下面应该是worker接受master的RPC的一些玄学操作
 	for {
 		wk.Lock()
 		if wk.nRPC == 0 {

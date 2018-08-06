@@ -11,12 +11,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
 	nNumber = 100000
-	nMap    = 100
-	nReduce = 50
+	nMap    = 10
+	nReduce = 5
 )
 
 // Create input file with N numbers
@@ -145,11 +146,12 @@ func cleanup(mr *Master) {
 
 func TestJoe(t *testing.T) {
 
-	a:=[]string{"Joe", "Hey"}
+	var wg sync.WaitGroup
 
-	for i, e := range a {
-		fmt.Println(i)
-		fmt.Println(e)
+
+	for i:=0;i<128;i++ {
+		wg.Add(1)
+		fmt.Println(wg.GetCounter())
 	}
 }
 
