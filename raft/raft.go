@@ -528,9 +528,17 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 			rf.LogAppendNum[ind]++
 			rf.persist()
 
+			// 更新一下CommitIndex
+			num:=1
+			if (ind>args.LeaderCommitIndex) {
+				for j:=range rf.peers {
+					if (j!=rf.me && rf.matchIndex[j]>=ind) {
+						num++
+					}
+				}
+			}
 
-			if (rf.LogAppendNum[ind]>len(rf.peers)/2  && ind > rf.CommitIndex && rf.Logs[ind].Term==rf.CurrentTerm) { // 那么把 ind之前的项都commit掉
-
+			if 2*num>len(rf.peers) {
 				for i:=rf.CommitIndex+1;i<=ind;i++ {
 					rf.CommitIndex = i
 					rf.CommitTerm = rf.Logs[i].Term
@@ -544,6 +552,24 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 					rf.applyCh <- sendApplyMsg
 				}
 			}
+
+			//更新一下CommitIndex结束
+
+			//if (rf.LogAppendNum[ind]>len(rf.peers)/2  && ind > rf.CommitIndex && rf.Logs[ind].Term==rf.CurrentTerm) { // 那么把 ind之前的项都commit掉
+			//
+			//	for i:=rf.CommitIndex+1;i<=ind;i++ {
+			//		rf.CommitIndex = i
+			//		rf.CommitTerm = rf.Logs[i].Term
+			//
+			//		if(DEBUG!=false){
+			//			fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
+			//		}
+			//
+			//		rf.persist()
+			//		sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
+			//		rf.applyCh <- sendApplyMsg
+			//	}
+			//}
 		}
 	} else {
 		if (rf.nextIndex[server]>1) {
