@@ -95,6 +95,8 @@ type Raft struct { // 要保存的量 的首字母要 变成大写
 	LogAppendNum map[int]int // 已经append了这条索引为index的日志项的节点的个数
 
 	applyCh chan ApplyMsg
+
+	chanCommit chan bool
 }
 
 type Entry struct { //因为要进行RPC通讯，所以要大写
@@ -121,8 +123,6 @@ func (rf *Raft) GetState() (int, bool) {
 // see paper's Figure 2 for a description of what should be persistent.
 //
 func (rf *Raft) persist() {
-	//fmt.Printf("server[%d]:Saving Persist...\n", rf.me)
-
 	// Your code here.
 	w := new(bytes.Buffer)
 	e := gob.NewEncoder(w)
@@ -149,8 +149,6 @@ func (rf *Raft) persist() {
 // restore previously persisted state.
 //
 func (rf *Raft) readPersist(data []byte) {
-	//fmt.Printf("server[%d]:Reading Persist...\n", rf.me)
-
 	// Your code here.
 	r := bytes.NewBuffer(data)
 	d := gob.NewDecoder(r)
@@ -216,11 +214,6 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 	}
 
 	reply.Term = rf.CurrentTerm
-
-	//fmt.Printf("节点[%d]收到[%d]的RequestVote, 投票:%t 投票给了:%d 当前term: %d\n", rf.me, args.CandidateId, reply.VoteGranted, rf.VotedFor, rf.CurrentTerm)
-
-	//fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
-	//	rf.me, args.CandidateId, rf.CurrentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.VotedFor)
 }
 
 //
@@ -264,9 +257,6 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 
 	if (reply.VoteGranted && rf.status == CANDIDATE) {
 		rf.voteCount++
-
-		//fmt.Printf("节点[%d]收到的投票数: %d  回复总数: %d  有效回复总数: %d   %v  %v\n", rf.me, rf.voteCount, rf.voteReplyCount, rf.voteReplyOkCount, rf.voteReplyCount==len(rf.peers), rf.voteCount> rf.voteReplyOkCount/2)
-		// 因为test2里面用了长延时，所以这样还是拿不到 回复的总数。不过可以尝试在外面一层 用超时来计算。但这样有点复杂
 
 		if(rf.voteCount> len(rf.peers)/2){ //大于一半的有效的节点投票了
 			rf.beLeader <- true
@@ -321,108 +311,6 @@ func (rf *Raft) Kill() {
 	// Your code here, if desired.
 }
 
-//
-// the service or tester wants to create a Raft server. the ports
-// of all the Raft servers (including this one) are in peers[]. this
-// server's port is peers[me]. all the servers' peers[] arrays
-// have the same order. persister is a place for this server to
-// save its persistent state, and also initially holds the most
-// recent saved state, if any. applyCh is a channel on which the
-// tester or service expects Raft to send ApplyMsg messages.
-// Make() must return quickly, so it should start goroutines
-// for any long-running work.
-//
-func Make(peers []*labrpc.ClientEnd, me int,
-	persister *Persister, applyCh chan ApplyMsg) *Raft {
-	rf := &Raft{}
-	rf.peers = peers
-	rf.persister = persister
-	rf.me = me
-
-	// Your initialization code here.
-	rf.applyCh = applyCh
-
-	rf.CurrentTerm = 0
-	rf.VotedFor = -1
-	rf.Logs = make([]Entry,1) // 为了从1开始索引，在index=0的位置加了一个空的日志项
-	rf.LogAppendNum = make(map[int]int)
-
-	rf.CommitIndex = 0 //根据论文里面的图，都是从1开始计数的
-	rf.CommitTerm = 0
-	rf.LastApplied = 0
-
-	rf.nextIndex = make([]int, len(rf.peers))
-	rf.matchIndex = make([]int, len(rf.peers))
-
-	rf.status = FOLLOWER //初始化为follower
-	rf.beLeader = make(chan bool, 1)
-	rf.getHeartBeat = make(chan bool, 1)
-
-	// initialize from state persisted before a crash
-	rf.readPersist(persister.ReadRaftState())
-
-	printLogEnd(rf, PRINTLOGNUM, DEBUG)
-
-	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
-		for{
-			switch rf.status{
-			case FOLLOWER:
-				select {
-				case <-time.After(getRandomExpireTime()): // 接收Leader的心跳超时，变成candidate，准备选举
-					rf.mu.Lock() // 这个lock是因为不止一个go routine在使用当前的节点，例如在 labrpc.go的MakeNetwork()那里的ProcessReq可能会用到当前的节点
-					rf.VotedFor = -1
-					rf.persist()
-					rf.status = CANDIDATE
-					//fmt.Printf("节点[%d]接收leader心跳超时, 变成candidate, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
-					//rf.CurrentTerm = rf.CurrentTerm + 1 //选举之前，先自增一下任期, 这个自增的位置，和师兄的代码的位置不同!!!
-					rf.mu.Unlock()
-
-				case <-rf.getHeartBeat: //这是为了不进入那个上面超时的case
-				}
-
-			case LEADER:
-				broadcastAppendEntries(rf) //复制leader的日志项给 followers
-				time.Sleep(time.Duration(HEARTBEAT_TIME)*time.Millisecond)
-
-			case CANDIDATE:
-				election(rf)
-
-				select {
-				case <-rf.beLeader:
-					rf.mu.Lock()
-					rf.status = LEADER
-
-					for i:=rf.CommitIndex+1;i< len(rf.Logs);i++ {
-						if n, ok:=rf.LogAppendNum[i]; !ok || n<1  { //如果这一项不存在，要初始化为1
-							rf.LogAppendNum[i] = 1
-						}
-					}
-
-					fmt.Printf("节点[%d]成为leader, 时间: %v, term: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
-
-					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
-						rf.nextIndex[i] = len(rf.Logs)
-						rf.matchIndex[i] = 0 //根据论文，index应该是从1开始计数的
-					}
-					rf.mu.Unlock()
-
-				case <-rf.getHeartBeat: //接收到别的leader的心跳，表示选举成功了，下面要降级为follower
-					//其实 可以在AppendEntries的时候 已经判断了一下term
-					rf.mu.Lock()
-					rf.status = FOLLOWER
-					rf.mu.Unlock()
-
-					//case <-time.After(500*time.Millisecond)://超时再没有接收到 有效的消息，那么 重新选举
-				case <-time.After(getRandomExpireTime())://超时再没有接收到 有效的消息，那么 重新选举
-
-				}
-			}
-		}
-	}(rf)
-
-	return rf
-}
-
 func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) {
 
 	if (args.Term<rf.CurrentTerm) {
@@ -457,20 +345,9 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 			rf.CommitIndex = args.FollowerMatchIndex
 		}
 
-		for i:=oldCommitIndex+1;i<=rf.CommitIndex;i++{
-			sendApplyMsg:=ApplyMsg{i, rf.Logs[i].Command, false, []byte{}}
-			rf.applyCh <- sendApplyMsg
+		if (oldCommitIndex!=rf.CommitIndex) {
+			rf.chanCommit<-true
 		}
-
-		rf.persist()
-
-		if(DEBUG!=false){
-			fmt.Printf("from follower [%d] : CommitIndex: %d\n", rf.me, rf.CommitIndex)
-		}
-
-		//if (args.LeaderCommitIndex <= len(rf.Logs)-1&&args.LeaderCommitTerm==rf.Logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
-		//	newCommitIndex = args.LeaderCommitIndex
-		//}
 	}
 
 	if (args.Entries.Index==-1){ //心跳
@@ -538,38 +415,16 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 				}
 			}
 
-			if 2*num>len(rf.peers) {
-				for i:=rf.CommitIndex+1;i<=ind;i++ {
-					rf.CommitIndex = i
-					rf.CommitTerm = rf.Logs[i].Term
+			if (2*num>len(rf.peers)&&rf.CommitIndex<ind) {
 
-					if(DEBUG!=false){
-						fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
-					}
+				rf.CommitIndex = ind
 
-					rf.persist()
-					sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
-					rf.applyCh <- sendApplyMsg
-				}
+				rf.persist()
+
+				rf.chanCommit<-true
 			}
 
 			//更新一下CommitIndex结束
-
-			//if (rf.LogAppendNum[ind]>len(rf.peers)/2  && ind > rf.CommitIndex && rf.Logs[ind].Term==rf.CurrentTerm) { // 那么把 ind之前的项都commit掉
-			//
-			//	for i:=rf.CommitIndex+1;i<=ind;i++ {
-			//		rf.CommitIndex = i
-			//		rf.CommitTerm = rf.Logs[i].Term
-			//
-			//		if(DEBUG!=false){
-			//			fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
-			//		}
-			//
-			//		rf.persist()
-			//		sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
-			//		rf.applyCh <- sendApplyMsg
-			//	}
-			//}
 		}
 	} else {
 		if (rf.nextIndex[server]>1) {
@@ -691,4 +546,129 @@ func printLogEnd(rf *Raft, num int, debug bool) {
 	fmt.Println()
 }
 
+//
+// the service or tester wants to create a Raft server. the ports
+// of all the Raft servers (including this one) are in peers[]. this
+// server's port is peers[me]. all the servers' peers[] arrays
+// have the same order. persister is a place for this server to
+// save its persistent state, and also initially holds the most
+// recent saved state, if any. applyCh is a channel on which the
+// tester or service expects Raft to send ApplyMsg messages.
+// Make() must return quickly, so it should start goroutines
+// for any long-running work.
+//
+func Make(peers []*labrpc.ClientEnd, me int,
+	persister *Persister, applyCh chan ApplyMsg) *Raft {
+	rf := &Raft{}
+	rf.peers = peers
+	rf.persister = persister
+	rf.me = me
 
+	// Your initialization code here.
+	rf.applyCh = applyCh
+
+	rf.CurrentTerm = 0
+	rf.VotedFor = -1
+	rf.Logs = make([]Entry,1) // 为了从1开始索引，在index=0的位置加了一个空的日志项
+	rf.LogAppendNum = make(map[int]int)
+
+	rf.CommitIndex = 0 //根据论文里面的图，都是从1开始计数的
+	rf.CommitTerm = 0
+	rf.LastApplied = 0
+
+	rf.nextIndex = make([]int, len(rf.peers))
+	rf.matchIndex = make([]int, len(rf.peers))
+
+	rf.status = FOLLOWER //初始化为follower
+	rf.beLeader = make(chan bool, 1)
+	rf.getHeartBeat = make(chan bool, 1)
+	rf.chanCommit = make(chan bool, 1)
+
+	// initialize from state persisted before a crash
+	rf.readPersist(persister.ReadRaftState())
+
+	printLogEnd(rf, PRINTLOGNUM, DEBUG)
+
+	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
+		for{
+			switch rf.status{
+			case FOLLOWER:
+				select {
+				case <-time.After(getRandomExpireTime()): // 接收Leader的心跳超时，变成candidate，准备选举
+					rf.mu.Lock() // 这个lock是因为不止一个go routine在使用当前的节点，例如在 labrpc.go的MakeNetwork()那里的ProcessReq可能会用到当前的节点
+					rf.VotedFor = -1
+					rf.persist()
+					rf.status = CANDIDATE
+					//fmt.Printf("节点[%d]接收leader心跳超时, 变成candidate, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
+					//rf.CurrentTerm = rf.CurrentTerm + 1 //选举之前，先自增一下任期, 这个自增的位置，和师兄的代码的位置不同!!!
+					rf.mu.Unlock()
+
+				case <-rf.getHeartBeat: //这是为了不进入那个上面超时的case
+				}
+
+			case LEADER:
+				broadcastAppendEntries(rf) //复制leader的日志项给 followers
+				time.Sleep(time.Duration(HEARTBEAT_TIME)*time.Millisecond)
+
+			case CANDIDATE:
+				election(rf)
+
+				select {
+				case <-rf.beLeader:
+					rf.mu.Lock()
+					rf.status = LEADER
+
+					for i:=rf.CommitIndex+1;i< len(rf.Logs);i++ {
+						if n, ok:=rf.LogAppendNum[i]; !ok || n<1  { //如果这一项不存在，要初始化为1
+							rf.LogAppendNum[i] = 1
+						}
+					}
+
+					if(DEBUG){
+						fmt.Printf("节点[%d]成为leader, 时间: %v, term: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
+					}
+
+					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
+						rf.nextIndex[i] = len(rf.Logs)
+						rf.matchIndex[i] = 0 //根据论文，index应该是从1开始计数的
+					}
+					rf.mu.Unlock()
+
+				case <-rf.getHeartBeat: //接收到别的leader的心跳，表示选举成功了，下面要降级为follower
+					//其实 可以在AppendEntries的时候 已经判断了一下term
+					rf.mu.Lock()
+					rf.status = FOLLOWER
+					rf.mu.Unlock()
+
+					//case <-time.After(500*time.Millisecond)://超时再没有接收到 有效的消息，那么 重新选举
+				case <-time.After(getRandomExpireTime())://超时再没有接收到 有效的消息，那么 重新选举
+
+				}
+			}
+		}
+	}(rf)
+
+
+	go func(rf *Raft){
+		for {
+			select {
+			case <-rf.chanCommit:
+				rf.mu.Lock()
+				for i:=rf.LastApplied+1;i<=rf.CommitIndex;i++ {
+					//rf.CommitTerm = rf.Logs[i].Term
+
+					if(DEBUG!=false){
+						fmt.Printf("from [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
+					}
+					rf.persist()
+					sendApplyMsg:=ApplyMsg{i, rf.Logs[i].Command, false, []byte{}}
+					rf.applyCh <- sendApplyMsg
+					rf.LastApplied = i
+				}
+				rf.mu.Unlock()
+			}
+		}
+	}(rf)
+
+	return rf
+}

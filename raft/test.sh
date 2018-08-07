@@ -1,7 +1,7 @@
 
 clear
 
-testName="TestFigure8"
+testName="TestReliableChurn"
 
 for k in $( seq 1 5)
 do
