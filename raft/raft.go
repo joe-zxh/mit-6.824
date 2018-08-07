@@ -347,6 +347,9 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 		if (oldCommitIndex!=rf.CommitIndex) {
 			rf.chanCommit<-true
+			if(DEBUG){
+				fmt.Printf("server[%d]: oldCIndex: %d, currentCIndex: %d, LeaderCIndex: %d, FollowerMIndex:%d \n", rf.me, oldCommitIndex, rf.CommitIndex, args.LeaderCommitIndex, args.FollowerMatchIndex)
+			}
 		}
 	}
 
@@ -415,7 +418,8 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 				}
 			}
 
-			if (2*num>len(rf.peers)&&rf.CommitIndex<ind) {
+			//if (2*num>len(rf.peers)&&rf.CommitIndex<ind) {
+			if (2*num>len(rf.peers)&&rf.CommitIndex<ind&&rf.Logs[ind].Term==rf.CurrentTerm) {
 
 				rf.CommitIndex = ind
 
@@ -440,16 +444,22 @@ func broadcastAppendEntries(rf *Raft) {
 
 	for i:=range(rf.peers) {
 		if (i!=rf.me && rf.status==LEADER) {
-			prevLog:=rf.Logs[rf.nextIndex[i]-1]
+			prevLog:=rf.Logs[rf.nextIndex[i]-1] //!!!
 			lastLog:=rf.Logs[len(rf.Logs)-1]
 
 			entrySend:=Entry{}
 
-			if (lastLog.Index>=prevLog.Index+1 && rf.matchIndex[i]!=lastLog.Index) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
-				entrySend=rf.Logs[rf.nextIndex[i]]
+			if (lastLog.Index>rf.matchIndex[i]) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
+				entrySend=rf.Logs[rf.matchIndex[i]+1]
 			} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
 				entrySend.Index=-1 //index=-1表示是心跳
 			}
+
+			//if (lastLog.Index>=prevLog.Index+1 && rf.matchIndex[i]!=lastLog.Index) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
+			//	entrySend=rf.Logs[rf.nextIndex[i]]
+			//} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
+			//	entrySend.Index=-1 //index=-1表示是心跳
+			//}
 
 			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
 			reply:=AppendEntriesReply{}
@@ -628,6 +638,10 @@ func Make(peers []*labrpc.ClientEnd, me int,
 						fmt.Printf("节点[%d]成为leader, 时间: %v, term: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
 					}
 
+					//if(DEBUG){
+					//	fmt.Printf("节点[%d]成为leader, 时间: %v, term: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
+					//}
+
 					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
 						rf.nextIndex[i] = len(rf.Logs)
 						rf.matchIndex[i] = 0 //根据论文，index应该是从1开始计数的
@@ -657,8 +671,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 				for i:=rf.LastApplied+1;i<=rf.CommitIndex;i++ {
 					//rf.CommitTerm = rf.Logs[i].Term
 
-					if(DEBUG!=false){
-						fmt.Printf("from [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
+					if(DEBUG){
+						fmt.Printf("from [%d] : CommitIndex: %d\n", rf.me, i)
 					}
 					rf.persist()
 					sendApplyMsg:=ApplyMsg{i, rf.Logs[i].Command, false, []byte{}}
