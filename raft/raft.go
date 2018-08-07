@@ -34,6 +34,8 @@ const HEARTBEAT_TIME int = 50 // leader50ms发送一次心跳
 
 const PRINTLOGNUM int = 35 // 打印的条数
 
+const DEBUG bool = false
+
 // 这个是用来测试用的 在config.go里面的start1()里面有个go func()检查
 // as(尽管) each Raft peer becomes aware that successive log entries are
 // committed, the peer should send an ApplyMsg to the service (or
@@ -147,7 +149,7 @@ func (rf *Raft) persist() {
 // restore previously persisted state.
 //
 func (rf *Raft) readPersist(data []byte) {
-	fmt.Printf("server[%d]:Reading Persist...\n", rf.me)
+	//fmt.Printf("server[%d]:Reading Persist...\n", rf.me)
 
 	// Your code here.
 	r := bytes.NewBuffer(data)
@@ -304,7 +306,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.LogAppendNum[len(rf.Logs)-1] = 1 //初始化为1
 
 	rf.persist()
-	printLogEnd(rf, PRINTLOGNUM)
+	printLogEnd(rf, PRINTLOGNUM, DEBUG)
 
 	return len(rf.Logs)-1, rf.CurrentTerm, isLeader
 }
@@ -359,7 +361,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
-	printLogEnd(rf, PRINTLOGNUM)
+	printLogEnd(rf, PRINTLOGNUM, DEBUG)
 
 	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
 		for{
@@ -371,7 +373,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					rf.VotedFor = -1
 					rf.persist()
 					rf.status = CANDIDATE
-					fmt.Printf("节点[%d]接收leader心跳超时, 变成candidate, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
+					//fmt.Printf("节点[%d]接收leader心跳超时, 变成candidate, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
 					//rf.CurrentTerm = rf.CurrentTerm + 1 //选举之前，先自增一下任期, 这个自增的位置，和师兄的代码的位置不同!!!
 					rf.mu.Unlock()
 
@@ -396,7 +398,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 						}
 					}
 
-					fmt.Printf("节点[%d]成为leader, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
+					fmt.Printf("节点[%d]成为leader, 时间: %v, term: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
 
 					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
 						rf.nextIndex[i] = len(rf.Logs)
@@ -428,13 +430,13 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		reply.Term = rf.CurrentTerm
 		rf.status = CANDIDATE
 		rf.voteCount = 0
-		fmt.Printf("AppendEntries - Server [%d] becomes CANDIDATE.\n", rf.me)
+		//fmt.Printf("AppendEntries - Server [%d] becomes CANDIDATE.\n", rf.me)
 		return
 	}
 
 	if (args.Term>rf.CurrentTerm) {
 		rf.status = FOLLOWER
-		fmt.Printf("AppendEntries - Server [%d] becomes FOLLOWER, Current Time: %v\n", rf.me, time.Now().UnixNano()/1000000)
+		//fmt.Printf("AppendEntries - Server [%d] becomes FOLLOWER, Current Time: %v\n", rf.me, time.Now().UnixNano()/1000000)
 		rf.VotedFor = -1
 		rf.CurrentTerm = args.Term
 		reply.Term = args.Term
@@ -461,7 +463,10 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		}
 
 		rf.persist()
-		fmt.Printf("from follower [%d] : CommitIndex: %d\n", rf.me, rf.CommitIndex)
+
+		if(DEBUG!=false){
+			fmt.Printf("from follower [%d] : CommitIndex: %d\n", rf.me, rf.CommitIndex)
+		}
 
 		//if (args.LeaderCommitIndex <= len(rf.Logs)-1&&args.LeaderCommitTerm==rf.Logs[args.LeaderCommitIndex].Term){ //要检查一下leader已经commit的日志项是否 和 当前节点拥有的对应index的日志项是同一个项
 		//	newCommitIndex = args.LeaderCommitIndex
@@ -491,7 +496,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 			rf.Logs = append(rf.Logs, args.Entries) //添加
 		}
 		rf.persist()
-		printLogEnd(rf, PRINTLOGNUM)
+		printLogEnd(rf, PRINTLOGNUM, DEBUG)
 	}
 }
 
@@ -529,7 +534,10 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 				for i:=rf.CommitIndex+1;i<=ind;i++ {
 					rf.CommitIndex = i
 					rf.CommitTerm = rf.Logs[i].Term
-					fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
+
+					if(DEBUG!=false){
+						fmt.Printf("from leader [%d] : CommitIndex: %d  CommitTerm: %d\n", rf.me, rf.CommitIndex, rf.CommitTerm)
+					}
 
 					rf.persist()
 					sendApplyMsg:=ApplyMsg{rf.CommitIndex, rf.Logs[rf.CommitIndex].Command, false, []byte{}}
@@ -636,7 +644,11 @@ func printLog(rf *Raft) {
 }
 
 // 只打印最后5条日志项
-func printLogEnd(rf *Raft, num int) {
+func printLogEnd(rf *Raft, num int, debug bool) {
+	if(debug==false){
+		return
+	}
+
 	fmt.Printf("server[%d]: ", rf.me)
 
 	var i int
@@ -652,3 +664,5 @@ func printLogEnd(rf *Raft, num int) {
 
 	fmt.Println()
 }
+
+
