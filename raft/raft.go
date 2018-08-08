@@ -214,6 +214,12 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 	}
 
 	reply.Term = rf.CurrentTerm
+
+	if(DEBUG){
+		fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
+			rf.me, args.CandidateId, rf.CurrentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.VotedFor)
+	}
+
 }
 
 //
@@ -296,7 +302,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.LogAppendNum[len(rf.Logs)-1] = 1 //初始化为1
 
 	rf.persist()
-	printLogEnd(rf, PRINTLOGNUM, DEBUG)
+	printLogFront(rf, PRINTLOGNUM, DEBUG)
 
 	return len(rf.Logs)-1, rf.CurrentTerm, isLeader
 }
@@ -354,6 +360,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 	}
 
 	if (args.Entries.Index==-1){ //心跳
+		reply.Success=true
 		return
 	}
 
@@ -376,7 +383,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 			rf.Logs = append(rf.Logs, args.Entries) //添加
 		}
 		rf.persist()
-		printLogEnd(rf, PRINTLOGNUM, DEBUG)
+		printLogFront(rf, PRINTLOGNUM, DEBUG)
 	}
 }
 
@@ -597,7 +604,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
-	printLogEnd(rf, PRINTLOGNUM, DEBUG)
+	printLogFront(rf, PRINTLOGNUM, DEBUG)
 
 	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
 		for{
@@ -609,8 +616,11 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					rf.VotedFor = -1
 					rf.persist()
 					rf.status = CANDIDATE
-					//fmt.Printf("节点[%d]接收leader心跳超时, 变成candidate, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
-					//rf.CurrentTerm = rf.CurrentTerm + 1 //选举之前，先自增一下任期, 这个自增的位置，和师兄的代码的位置不同!!!
+					rf.voteCount = 1
+					if(DEBUG){
+						fmt.Printf("节点[%d]接收leader心跳超时, 变成candidate, 时间: %v\n", rf.me, time.Now().UnixNano()/1000000) //毫秒级别
+					}
+
 					rf.mu.Unlock()
 
 				case <-rf.getHeartBeat: //这是为了不进入那个上面超时的case
@@ -628,6 +638,12 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					rf.mu.Lock()
 					rf.status = LEADER
 
+					// 暴力!!! 可以再调小一点
+					//ttInt:=5
+					//if (len(rf.Logs)>(rf.CommitIndex+ttInt+1)) {
+					//	rf.Logs = rf.Logs[:rf.CommitIndex+ttInt+1]
+					//}
+
 					for i:=rf.CommitIndex+1;i< len(rf.Logs);i++ {
 						if n, ok:=rf.LogAppendNum[i]; !ok || n<1  { //如果这一项不存在，要初始化为1
 							rf.LogAppendNum[i] = 1
@@ -637,10 +653,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					if(DEBUG){
 						fmt.Printf("节点[%d]成为leader, 时间: %v, term: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
 					}
-
-					//if(DEBUG){
-					//	fmt.Printf("节点[%d]成为leader, 时间: %v, term: %d\n", rf.me, time.Now().UnixNano()/1000000, rf.CurrentTerm) //毫秒级别
-					//}
 
 					for i:=0;i<len(rf.peers); i++{ //初始化一波nextIndex
 						rf.nextIndex[i] = len(rf.Logs)
@@ -685,4 +697,26 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	}(rf)
 
 	return rf
+}
+
+
+func printLogFront(rf *Raft, num int, debug bool) {
+	if (debug!=true){
+		return
+	}
+
+	fmt.Printf("server[%d]: ", rf.me)
+
+	var endIndex int
+	if (len(rf.Logs)>=(num+1)) {
+		endIndex = num
+	} else {
+		endIndex = len(rf.Logs)-1
+	}
+
+	for i:=0;i<=endIndex;i++ {
+		fmt.Printf("i:%d t:%d c:%v -> ", rf.Logs[i].Index, rf.Logs[i].Term, rf.Logs[i].Command)
+	}
+
+	fmt.Println()
 }

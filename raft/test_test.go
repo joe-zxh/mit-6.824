@@ -22,9 +22,12 @@ import (
 const RaftElectionTimeout = 1000 * time.Millisecond
 
 func TestJoe(t *testing.T)  {
+	a:=[]int{1,2 ,3}
 
-	for i:=1;i<=1;i++{
-		fmt.Println("Fuck!")
+	if (a[4]>5){
+		fmt.Println("yes")
+	} else {
+		fmt.Println("No")
 	}
 }
 
