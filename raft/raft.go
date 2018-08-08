@@ -1,5 +1,5 @@
 package raft
-
+//我
 //
 // this is an outline of the API that raft must expose to
 // the service (or tester). see comments below for
@@ -34,7 +34,7 @@ const HEARTBEAT_TIME int = 50 // leader50ms发送一次心跳
 
 const PRINTLOGNUM int = 35 // 打印的条数
 
-const DEBUG bool = false
+const DEBUG bool = true
 
 // 这个是用来测试用的 在config.go里面的start1()里面有个go func()检查
 // as(尽管) each Raft peer becomes aware that successive log entries are
@@ -215,10 +215,10 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 
 	reply.Term = rf.CurrentTerm
 
-	if(DEBUG){
-		fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
-			rf.me, args.CandidateId, rf.CurrentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.VotedFor)
-	}
+	//if(DEBUG){
+	//	fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
+	//		rf.me, args.CandidateId, rf.CurrentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.VotedFor)
+	//}
 
 }
 
@@ -364,12 +364,30 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		return
 	}
 
-	if (args.PrevLogIndex > len(rf.Logs)-1) { //index不存在
+	if (args.PrevLogIndex > len(rf.Logs)-1) {
+		//index不存在
+		reply.NextIndex = len(rf.Logs)
+		reply.Success = false
+
+		return
+	} else if(rf.Logs[args.PrevLogIndex].Term!=args.PrevLogTerm){
+		//或者 index存在 但term不相等
+
+		for i := args.PrevLogIndex - 1 ; i >= 0; i-- {
+			if (i==0) {
+				reply.NextIndex = 1
+				break
+			}
+
+			if rf.Logs[i].Term != args.PrevLogTerm {
+				reply.NextIndex = i + 1
+				break
+			}
+		}
+
 		reply.Success = false
 		return
-	} else if(rf.Logs[args.PrevLogIndex].Term!=args.PrevLogTerm){ //index存在 但term不相等
-		reply.Success = false
-		return
+
 	} else { //match
 		reply.Success = true
 
@@ -398,13 +416,21 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 		return false
 	}
 
-	if (reply.Term>rf.CurrentTerm) {
+	if (reply.Term>args.Term) {
 		rf.CurrentTerm = reply.Term
 		rf.status = FOLLOWER
 		rf.VotedFor = -1
 		rf.persist()
 		return false
 	}
+
+	//if (reply.Term>rf.CurrentTerm) {
+	//	rf.CurrentTerm = reply.Term
+	//	rf.status = FOLLOWER
+	//	rf.VotedFor = -1
+	//	rf.persist()
+	//	return false
+	//}
 
 	if (reply.Success) {
 		if (args.Entries.Index!=-1) { //不是心跳
@@ -438,9 +464,11 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 			//更新一下CommitIndex结束
 		}
 	} else {
-		if (rf.nextIndex[server]>1) {
-			rf.nextIndex[server]--
+		if(reply.NextIndex==0){
+			fmt.Println("Fuck")
 		}
+
+		rf.nextIndex[server] = reply.NextIndex
 	}
 	return true
 }
@@ -451,6 +479,7 @@ func broadcastAppendEntries(rf *Raft) {
 
 	for i:=range(rf.peers) {
 		if (i!=rf.me && rf.status==LEADER) {
+			//fmt.Printf("logsLen: %d, index: %d\n", len(rf.Logs), rf.nextIndex[i]-1)
 			prevLog:=rf.Logs[rf.nextIndex[i]-1] //!!!
 			lastLog:=rf.Logs[len(rf.Logs)-1]
 
@@ -461,12 +490,6 @@ func broadcastAppendEntries(rf *Raft) {
 			} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
 				entrySend.Index=-1 //index=-1表示是心跳
 			}
-
-			//if (lastLog.Index>=prevLog.Index+1 && rf.matchIndex[i]!=lastLog.Index) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
-			//	entrySend=rf.Logs[rf.nextIndex[i]]
-			//} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
-			//	entrySend.Index=-1 //index=-1表示是心跳
-			//}
 
 			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
 			reply:=AppendEntriesReply{}
@@ -493,6 +516,10 @@ type AppendEntriesArgs struct{
 type AppendEntriesReply struct{
 	Term int
 	Success bool
+
+	// optimization to reduce the number of rejected AppendEntries RPCs.
+	NextIndex int //-1表示 当前节点没有 那个term的日志项，如果不为-1，还是和原来那样
+
 }
 
 // candidate的leader选举
@@ -529,7 +556,7 @@ func broadcastRequestVote(rf *Raft){
 }
 
 func getRandomExpireTime() time.Duration{ //150-300ms
-	return time.Duration(rand.Int63n(300-150)+150)*time.Millisecond
+	return time.Duration(rand.Int63() % 333+550)*time.Millisecond
 }
 
 
