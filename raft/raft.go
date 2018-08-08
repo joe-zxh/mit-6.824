@@ -374,6 +374,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		//或者 index存在 但term不相等
 
 		termTemp:=rf.Logs[args.PrevLogIndex].Term
+
 		for i := args.PrevLogIndex - 1 ; i >= 0; i-- {
 			if (i==0) {
 				reply.NextIndex = 1
@@ -398,14 +399,10 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 			} else { //添加
 				rf.Logs = append(rf.Logs, args.Entries...)
 			}
-
-
 			rf.persist()
 			printLogFront(rf, PRINTLOGNUM, DEBUG)
 		}
-
 		reply.Success = true
-
 	}
 }
 
@@ -530,7 +527,6 @@ type AppendEntriesReply struct{
 
 	// optimization to reduce the number of rejected AppendEntries RPCs.
 	NextIndex int //-1表示 当前节点没有 那个term的日志项，如果不为-1，还是和原来那样
-
 }
 
 func election(rf *Raft) {
@@ -569,7 +565,6 @@ func getRandomExpireTime() time.Duration{ //150-300ms
 	return time.Duration(rand.Int63() % 333+660)*time.Millisecond
 }
 
-
 func printLog(rf *Raft) {
 	fmt.Printf("server[%d]: ", rf.me)
 	for _, entry:=range rf.Logs {
@@ -594,6 +589,27 @@ func printLogEnd(rf *Raft, num int, debug bool) {
 	}
 
 	for ;i<len(rf.Logs);i++ {
+		fmt.Printf("i:%d t:%d c:%v -> ", rf.Logs[i].Index, rf.Logs[i].Term, rf.Logs[i].Command)
+	}
+
+	fmt.Println()
+}
+
+func printLogFront(rf *Raft, num int, debug bool) {
+	if (debug!=true){
+		return
+	}
+
+	fmt.Printf("server[%d]: ", rf.me)
+
+	var endIndex int
+	if (len(rf.Logs)>=(num+1)) {
+		endIndex = num
+	} else {
+		endIndex = len(rf.Logs)-1
+	}
+
+	for i:=0;i<=endIndex;i++ {
 		fmt.Printf("i:%d t:%d c:%v -> ", rf.Logs[i].Index, rf.Logs[i].Term, rf.Logs[i].Command)
 	}
 
@@ -735,26 +751,4 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	}(rf)
 
 	return rf
-}
-
-
-func printLogFront(rf *Raft, num int, debug bool) {
-	if (debug!=true){
-		return
-	}
-
-	fmt.Printf("server[%d]: ", rf.me)
-
-	var endIndex int
-	if (len(rf.Logs)>=(num+1)) {
-		endIndex = num
-	} else {
-		endIndex = len(rf.Logs)-1
-	}
-
-	for i:=0;i<=endIndex;i++ {
-		fmt.Printf("i:%d t:%d c:%v -> ", rf.Logs[i].Index, rf.Logs[i].Term, rf.Logs[i].Command)
-	}
-
-	fmt.Println()
 }
