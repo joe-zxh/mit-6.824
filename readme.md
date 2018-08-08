@@ -1,4 +1,4 @@
 
 lab1 mapreduce实验 完成
 
-lab2 raft的实验，后面3个test过不了：TestFigure8Unreliable、TestReliableChurn以及TestUnreliableChurn
+lab2 raft实验 完成
