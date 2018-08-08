@@ -1,5 +1,5 @@
 package raft
-//我
+//
 //
 // this is an outline of the API that raft must expose to
 // the service (or tester). see comments below for
@@ -215,11 +215,10 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 
 	reply.Term = rf.CurrentTerm
 
-	//if(DEBUG){
-	//	fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
-	//		rf.me, args.CandidateId, rf.CurrentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.VotedFor)
-	//}
-
+	if(DEBUG){
+		fmt.Printf("节点[%d]收到[%d]的RequestVote, 节点的term:%d, 节点最新log的term:%d, index:%d, args.term:%d, LastLogTerm:%d, LastLogIndex:%d 投票:%t 投票给了:%d\n",
+			rf.me, args.CandidateId, rf.CurrentTerm, lastLog.Term, lastLog.Index, args.Term, args.LastLogTerm, args.LastLogIndex, reply.VoteGranted, rf.VotedFor)
+	}
 }
 
 //
@@ -425,14 +424,6 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 		return false
 	}
 
-	//if (reply.Term>rf.CurrentTerm) {
-	//	rf.CurrentTerm = reply.Term
-	//	rf.status = FOLLOWER
-	//	rf.VotedFor = -1
-	//	rf.persist()
-	//	return false
-	//}
-
 	if (reply.Success) {
 		if (!args.HeartBeat&& len(args.Entries)>0) { //不是心跳
 			rf.matchIndex[server] = args.Entries[len(args.Entries)-1].Index
@@ -478,7 +469,6 @@ func broadcastAppendEntries(rf *Raft) {
 
 	for i:=range(rf.peers) {
 		if (i!=rf.me && rf.status==LEADER) {
-			//fmt.Printf("logsLen: %d, index: %d\n", len(rf.Logs), rf.nextIndex[i]-1)
 			prevLog:=rf.Logs[rf.nextIndex[i]-1] //!!!
 			lastLog:=rf.Logs[len(rf.Logs)-1]
 
@@ -486,15 +476,12 @@ func broadcastAppendEntries(rf *Raft) {
 
 			hb:=false
 
-			//TODO !!!
 			if (lastLog.Index>=rf.nextIndex[i]-1) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
 				entriesSend=rf.Logs[rf.nextIndex[i]:]
 				hb=false
 			} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
 				hb=true
 			}
-
-			//args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entriesSend, hb, rf.CommitTerm, rf.matchIndex[i], rf.matchIndex[i]}
 
 			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entriesSend, hb, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
 
@@ -504,8 +491,7 @@ func broadcastAppendEntries(rf *Raft) {
 				rf.sendAppendEntries(server, args, &reply)
 			}(i)
 		}
-// candidate的leader选举
-}
+	}
 }
 
 type AppendEntriesArgs struct{
@@ -526,7 +512,7 @@ type AppendEntriesReply struct{
 	Success bool
 
 	// optimization to reduce the number of rejected AppendEntries RPCs.
-	NextIndex int //-1表示 当前节点没有 那个term的日志项，如果不为-1，还是和原来那样
+	NextIndex int
 }
 
 func election(rf *Raft) {
@@ -573,7 +559,7 @@ func printLog(rf *Raft) {
 	fmt.Println()
 }
 
-// 只打印最后5条日志项
+// 只打印最后num条日志项
 func printLogEnd(rf *Raft, num int, debug bool) {
 	if(debug==false){
 		return
@@ -691,12 +677,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					rf.mu.Lock()
 					rf.status = LEADER
 
-					// 暴力!!! 可以再调小一点
-					//ttInt:=5
-					//if (len(rf.Logs)>(rf.CommitIndex+ttInt+1)) {
-					//	rf.Logs = rf.Logs[:rf.CommitIndex+ttInt+1]
-					//}
-
 					for i:=rf.CommitIndex+1;i< len(rf.Logs);i++ {
 						if n, ok:=rf.LogAppendNum[i]; !ok || n<1  { //如果这一项不存在，要初始化为1
 							rf.LogAppendNum[i] = 1
@@ -719,7 +699,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					rf.status = FOLLOWER
 					rf.mu.Unlock()
 
-					//case <-time.After(500*time.Millisecond)://超时再没有接收到 有效的消息，那么 重新选举
 				case <-time.After(getRandomExpireTime())://超时再没有接收到 有效的消息，那么 重新选举
 
 				}
