@@ -24,11 +24,7 @@ const RaftElectionTimeout = 1000 * time.Millisecond
 func TestJoe(t *testing.T)  {
 	a:=[]int{1,2 ,3}
 
-	if (a[4]>5){
-		fmt.Println("yes")
-	} else {
-		fmt.Println("No")
-	}
+	fmt.Printf("%v\n",a[1:])
 }
 
 func TestInitialElection(t *testing.T) {

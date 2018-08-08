@@ -34,7 +34,7 @@ const HEARTBEAT_TIME int = 50 // leader50ms发送一次心跳
 
 const PRINTLOGNUM int = 35 // 打印的条数
 
-const DEBUG bool = true
+const DEBUG bool = false
 
 // 这个是用来测试用的 在config.go里面的start1()里面有个go func()检查
 // as(尽管) each Raft peer becomes aware that successive log entries are
@@ -359,7 +359,7 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		}
 	}
 
-	if (args.Entries.Index==-1){ //心跳
+	if (args.HeartBeat){ //心跳
 		reply.Success=true
 		return
 	}
@@ -373,13 +373,14 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 	} else if(rf.Logs[args.PrevLogIndex].Term!=args.PrevLogTerm){
 		//或者 index存在 但term不相等
 
+		termTemp:=rf.Logs[args.PrevLogIndex].Term
 		for i := args.PrevLogIndex - 1 ; i >= 0; i-- {
 			if (i==0) {
 				reply.NextIndex = 1
 				break
 			}
 
-			if rf.Logs[i].Term != args.PrevLogTerm {
+			if rf.Logs[i].Term != termTemp {
 				reply.NextIndex = i + 1
 				break
 			}
@@ -389,19 +390,22 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		return
 
 	} else { //match
+		if(len(args.Entries)>0) {
+			firstInd:=args.Entries[0].Index
+
+			if (len(rf.Logs)-1>=firstInd) { //覆盖
+				rf.Logs = append(rf.Logs[:firstInd], args.Entries...)
+			} else { //添加
+				rf.Logs = append(rf.Logs, args.Entries...)
+			}
+
+
+			rf.persist()
+			printLogFront(rf, PRINTLOGNUM, DEBUG)
+		}
+
 		reply.Success = true
 
-		if (len(rf.Logs)>args.Entries.Index) { //判断 是覆盖，还是添加
-			if(rf.Logs[args.Entries.Index].Term==args.Entries.Term&&rf.Logs[args.Entries.Index].Index==args.Entries.Index) { //避免重复添加
-				return
-			}
-			////!!!!!!!!!!
-			rf.Logs[args.Entries.Index] = args.Entries //覆盖
-		} else {
-			rf.Logs = append(rf.Logs, args.Entries) //添加
-		}
-		rf.persist()
-		printLogFront(rf, PRINTLOGNUM, DEBUG)
 	}
 }
 
@@ -433,33 +437,31 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 	//}
 
 	if (reply.Success) {
-		if (args.Entries.Index!=-1) { //不是心跳
-			rf.matchIndex[server] = args.Entries.Index
+		if (!args.HeartBeat&& len(args.Entries)>0) { //不是心跳
+			rf.matchIndex[server] = args.Entries[len(args.Entries)-1].Index
 			rf.nextIndex[server] = rf.matchIndex[server]+1
 
-			ind:=args.Entries.Index
-			rf.LogAppendNum[ind]++
-			rf.persist()
-
 			// 更新一下CommitIndex
-			num:=1
-			if (ind>args.LeaderCommitIndex) {
-				for j:=range rf.peers {
-					if (j!=rf.me && rf.matchIndex[j]>=ind) {
-						num++
+			ind:=rf.matchIndex[server]
+
+			for ;ind>=args.Entries[0].Index;ind-- {
+				rf.LogAppendNum[ind]++
+				num:=1
+				if (ind>args.LeaderCommitIndex) {
+					for j:=range rf.peers {
+						if (j!=rf.me && rf.matchIndex[j]>=ind) {
+							num++
+						}
 					}
 				}
+
+				if (2*num>len(rf.peers)&&rf.CommitIndex<ind&&rf.Logs[ind].Term==rf.CurrentTerm) {
+					rf.CommitIndex = ind
+					rf.chanCommit<-true
+					break;
+				}
 			}
-
-			//if (2*num>len(rf.peers)&&rf.CommitIndex<ind) {
-			if (2*num>len(rf.peers)&&rf.CommitIndex<ind&&rf.Logs[ind].Term==rf.CurrentTerm) {
-
-				rf.CommitIndex = ind
-
-				rf.persist()
-
-				rf.chanCommit<-true
-			}
+			rf.persist()
 
 			//更新一下CommitIndex结束
 		}
@@ -483,22 +485,30 @@ func broadcastAppendEntries(rf *Raft) {
 			prevLog:=rf.Logs[rf.nextIndex[i]-1] //!!!
 			lastLog:=rf.Logs[len(rf.Logs)-1]
 
-			entrySend:=Entry{}
+			entriesSend:=[]Entry{}
 
-			if (lastLog.Index>rf.matchIndex[i]) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
-				entrySend=rf.Logs[rf.matchIndex[i]+1]
+			hb:=false
+
+			//TODO !!!
+			if (lastLog.Index>=rf.nextIndex[i]-1) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
+				entriesSend=rf.Logs[rf.nextIndex[i]:]
+				hb=false
 			} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
-				entrySend.Index=-1 //index=-1表示是心跳
+				hb=true
 			}
 
-			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entrySend, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
+			//args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entriesSend, hb, rf.CommitTerm, rf.matchIndex[i], rf.matchIndex[i]}
+
+			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entriesSend, hb, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
+
 			reply:=AppendEntriesReply{}
 
 			go func(server int) {
 				rf.sendAppendEntries(server, args, &reply)
 			}(i)
 		}
-	}
+// candidate的leader选举
+}
 }
 
 type AppendEntriesArgs struct{
@@ -506,7 +516,8 @@ type AppendEntriesArgs struct{
 	LeaderId int
 	PrevLogIndex int
 	PrevLogTerm int
-	Entries Entry // index设为-1时 表示心跳
+	Entries []Entry //
+	HeartBeat bool //是否是心跳
 	LeaderCommitIndex int
 	LeaderCommitTerm int
 
@@ -522,7 +533,6 @@ type AppendEntriesReply struct{
 
 }
 
-// candidate的leader选举
 func election(rf *Raft) {
 	rf.mu.Lock()
 	rf.CurrentTerm++ //选举之前，先自增一下任期, 这个自增的位置，不能在外面，不然过不了test2!!!
@@ -556,7 +566,7 @@ func broadcastRequestVote(rf *Raft){
 }
 
 func getRandomExpireTime() time.Duration{ //150-300ms
-	return time.Duration(rand.Int63() % 333+550)*time.Millisecond
+	return time.Duration(rand.Int63() % 333+660)*time.Millisecond
 }
 
 
@@ -714,6 +724,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 						fmt.Printf("from [%d] : CommitIndex: %d\n", rf.me, i)
 					}
 					rf.persist()
+
 					sendApplyMsg:=ApplyMsg{i, rf.Logs[i].Command, false, []byte{}}
 					rf.applyCh <- sendApplyMsg
 					rf.LastApplied = i
