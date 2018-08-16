@@ -2,12 +2,17 @@ package raftkv
 
 import "labrpc"
 import "crypto/rand"
-import "math/big"
-
+import (
+	"math/big"
+	"sync"
+)
 
 type Clerk struct {
 	servers []*labrpc.ClientEnd
 	// You will have to modify this struct.
+	id int64
+	reqid int
+	mu sync.Mutex
 }
 
 func nrand() int64 {
@@ -21,6 +26,8 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 	ck := new(Clerk)
 	ck.servers = servers
 	// You'll have to add code here.
+	ck.id = nrand()
+	ck.reqid = 0
 	return ck
 }
 
@@ -39,6 +46,23 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 func (ck *Clerk) Get(key string) string {
 
 	// You will have to modify this function.
+
+	args := GetArgs{Key:key, Id:ck.id}
+	ck.mu.Lock()
+	args.ReqID = ck.reqid
+	ck.reqid++
+	ck.mu.Unlock()
+
+	for {
+		for _, v:=range ck.servers {
+			reply := GetReply{}
+			ok := v.Call("RaftKV.Get", &args, &reply)
+			if ok && reply.WrongLeader == false {
+				return reply.Value //一直循环到成功PutAppend为止。
+			}
+		}
+	}
+
 	return ""
 }
 
@@ -54,11 +78,30 @@ func (ck *Clerk) Get(key string) string {
 //
 func (ck *Clerk) PutAppend(key string, value string, op string) {
 	// You will have to modify this function.
+
+	// 对所有server都call一次，如果不是leader，PutAppend的时候会自动忽略请求。 leader会使用那个Start(command)函数，然后让所有的节点都执行这条指令。
+	args := PutAppendArgs{Key:key, Value:value, Op:op, Id:ck.id}
+
+	ck.mu.Lock()
+	args.ReqID = ck.reqid
+	ck.reqid++
+	ck.mu.Unlock()
+
+	for {
+		for _, v:=range ck.servers {
+			reply := PutAppendReply{}
+			ok := v.Call("RaftKV.PutAppend", &args, &reply)
+			if ok && reply.WrongLeader == false {
+				return //一直循环到成功PutAppend为止。
+			}
+		}
+	}
 }
 
 func (ck *Clerk) Put(key string, value string) {
 	ck.PutAppend(key, value, "Put")
 }
+
 func (ck *Clerk) Append(key string, value string) {
 	ck.PutAppend(key, value, "Append")
 }

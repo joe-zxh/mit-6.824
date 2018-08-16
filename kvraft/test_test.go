@@ -232,11 +232,11 @@ func GenericTest(t *testing.T, tag string, nclients int, unreliable bool, crash 
 	fmt.Printf("  ... Passed\n")
 }
 
-func TestJoe(t *testing.T) {
-	fmt.Println(randstring(5))
-	fmt.Println(randstring(5))
-	fmt.Println(randstring(5))
-}
+//func TestJoe(t *testing.T) {
+//	fmt.Println(randstring(5))
+//	fmt.Println(randstring(5))
+//	fmt.Println(randstring(5))
+//}
 
 func TestBasic(t *testing.T) {
 	fmt.Printf("Test: One client ...\n")

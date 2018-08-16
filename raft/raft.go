@@ -157,7 +157,7 @@ func (rf *Raft) readPersist(data []byte) {
 	d.Decode(&rf.Logs)
 	d.Decode(&rf.CommitIndex)
 	d.Decode(&rf.CommitTerm)
-	d.Decode(&rf.LastApplied)
+	//d.Decode(&rf.LastApplied)
 	d.Decode(&rf.LogAppendNum)
 
 	// Example:
