@@ -12,14 +12,14 @@ import "sync"
 import "runtime"
 import "raft"
 
-func randstring(n int) string {
+func randstring(n int) string { //产生一个长度为n的随机字符串
 	b := make([]byte, 2*n)
 	crand.Read(b)
 	s := base64.URLEncoding.EncodeToString(b)
 	return s[0:n]
 }
 
-// Randomize server handles
+// Randomize server handles 每节点即是server，也是client。但是需要把他们的顺序打乱。
 func random_handles(kvh []*labrpc.ClientEnd) []*labrpc.ClientEnd {
 	sa := make([]*labrpc.ClientEnd, len(kvh))
 	copy(sa, kvh)
@@ -38,10 +38,10 @@ type config struct {
 	n            int
 	kvservers    []*RaftKV
 	saved        []*raft.Persister
-	endnames     [][]string // names of each server's sending ClientEnds
+	endnames     [][]string // names of each server's sending ClientEnds   第一个索引是server的index值i，第二个索引的是 client的index值j。拿到的是client j在server i中的名字
 	clerks       map[*Clerk][]string
 	nextClientId int
-	maxraftstate int
+	maxraftstate int //每个服务器 最多保存多少个log
 }
 
 func (cfg *config) cleanup() {
@@ -54,7 +54,7 @@ func (cfg *config) cleanup() {
 	}
 }
 
-// Maximum log size across all servers
+// Maximum log size across all servers      返回的是所有server中，log最长的那个的长度值。
 func (cfg *config) LogSize() int {
 	logsize := 0
 	for i := 0; i < cfg.n; i++ {
@@ -66,7 +66,7 @@ func (cfg *config) LogSize() int {
 	return logsize
 }
 
-// attach server i to servers listed in to
+// attach server i to servers listed in to[]  这里的to是一个数组，这句话说的是  把服务器i和 所有在to数组里面的服务器 相连接。
 // caller must hold cfg.mu
 func (cfg *config) connectUnlocked(i int, to []int) {
 	// log.Printf("connect peer %d to %v\n", i, to)
@@ -90,7 +90,7 @@ func (cfg *config) connect(i int, to []int) {
 	cfg.connectUnlocked(i, to)
 }
 
-// detach server i from the servers listed in from
+// detach server i from the servers listed in from[] 把服务器i和 所有在from数组里面的服务器 相断开。
 // caller must hold cfg.mu
 func (cfg *config) disconnectUnlocked(i int, from []int) {
 	// log.Printf("disconnect peer %d from %v\n", i, from)
@@ -126,6 +126,7 @@ func (cfg *config) All() []int {
 	return all
 }
 
+// 把所有的服务器节点都连接起来
 func (cfg *config) ConnectAll() {
 	cfg.mu.Lock()
 	defer cfg.mu.Unlock()
@@ -134,7 +135,7 @@ func (cfg *config) ConnectAll() {
 	}
 }
 
-// Sets up 2 partitions with connectivity between servers in each  partition.
+// Sets up 2 partitions with connectivity between servers in each  partition. 把整个集群分成2个partition
 func (cfg *config) partition(p1 []int, p2 []int) {
 	cfg.mu.Lock()
 	defer cfg.mu.Unlock()
@@ -152,6 +153,7 @@ func (cfg *config) partition(p1 []int, p2 []int) {
 // Create a clerk with clerk specific server names.
 // Give it connections to all of the servers, but for
 // now enable only connections to servers in to[].
+// 建立客户端用户
 func (cfg *config) makeClient(to []int) *Clerk {
 	cfg.mu.Lock()
 	defer cfg.mu.Unlock()
@@ -165,7 +167,7 @@ func (cfg *config) makeClient(to []int) *Clerk {
 		cfg.net.Connect(endnames[j], j)
 	}
 
-	ck := MakeClerk(random_handles(ends))
+	ck := MakeClerk(random_handles(ends)) // 其实这里为什么用要用random_handles(ends)打乱客户端的顺序呢???
 	cfg.clerks[ck] = endnames
 	cfg.nextClientId++
 	cfg.ConnectClientUnlocked(ck, to)
@@ -178,7 +180,7 @@ func (cfg *config) deleteClient(ck *Clerk) {
 
 	v := cfg.clerks[ck]
 	for i := 0; i < len(v); i++ {
-		os.Remove(v[i])
+		os.Remove(v[i]) // 貌似clerk的每个client都有一个(以client名字命名)的文件夹?
 	}
 	delete(cfg.clerks, ck)
 }
@@ -286,6 +288,7 @@ func (cfg *config) StartServer(i int) {
 	cfg.net.AddServer(i, srv)
 }
 
+// 遍历一遍所有的节点，找到leader的索引
 func (cfg *config) Leader() (bool, int) {
 	cfg.mu.Lock()
 	defer cfg.mu.Unlock()
@@ -299,7 +302,7 @@ func (cfg *config) Leader() (bool, int) {
 	return false, 0
 }
 
-// Partition servers into 2 groups and put current leader in minority
+// Partition servers into 2 groups and put current leader in minority  分成2个组，并把leader放在小的组里面
 func (cfg *config) make_partition() ([]int, []int) {
 	_, l := cfg.Leader()
 	p1 := make([]int, cfg.n/2+1)

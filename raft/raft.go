@@ -157,7 +157,7 @@ func (rf *Raft) readPersist(data []byte) {
 	d.Decode(&rf.Logs)
 	d.Decode(&rf.CommitIndex)
 	d.Decode(&rf.CommitTerm)
-	//d.Decode(&rf.LastApplied) //这个量貌似不需要 持久化，因为某个kv的服务器崩掉之后，需要重新执行一下之前apply的操作。
+	d.Decode(&rf.LastApplied)
 	d.Decode(&rf.LogAppendNum)
 
 	// Example:
