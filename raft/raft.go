@@ -129,10 +129,10 @@ func (rf *Raft) persist() {
 	e.Encode(rf.CurrentTerm)
 	e.Encode(rf.VotedFor)
 	e.Encode(rf.Logs)
-	e.Encode(rf.CommitIndex)
-	e.Encode(rf.CommitTerm)
+	//e.Encode(rf.CommitIndex)
+	//e.Encode(rf.CommitTerm)
 	//e.Encode(rf.LastApplied)
-	e.Encode(rf.LogAppendNum)
+	//e.Encode(rf.LogAppendNum)
 	data := w.Bytes()
 	rf.persister.SaveRaftState(data)
 
@@ -145,6 +145,35 @@ func (rf *Raft) persist() {
 	// rf.persister.SaveRaftState(data)
 }
 
+func (rf *Raft) readSnapshot(data []byte) {
+
+	rf.readPersist(rf.persister.ReadRaftState())
+
+	if len(data) == 0 {
+		return
+	}
+
+	r := bytes.NewBuffer(data)
+	d := gob.NewDecoder(r)
+
+	var LastIncludedIndex int
+	var LastIncludedTerm int
+
+	d.Decode(&LastIncludedIndex)
+	d.Decode(&LastIncludedTerm)
+
+	rf.CommitIndex = LastIncludedIndex
+	rf.LastApplied = LastIncludedIndex
+
+	rf.Logs = truncateLog(LastIncludedIndex, LastIncludedTerm, rf.Logs)
+
+	msg := ApplyMsg{UseSnapshot: true, Snapshot: data}
+
+	go func() {
+		rf.applyCh <- msg
+	}()
+}
+
 //
 // restore previously persisted state.
 //
@@ -155,10 +184,10 @@ func (rf *Raft) readPersist(data []byte) {
 	d.Decode(&rf.CurrentTerm)
 	d.Decode(&rf.VotedFor)
 	d.Decode(&rf.Logs)
-	d.Decode(&rf.CommitIndex)
-	d.Decode(&rf.CommitTerm)
+	//d.Decode(&rf.CommitIndex)
+	//d.Decode(&rf.CommitTerm)
 	//d.Decode(&rf.LastApplied)//这个量不需要 持久化，因为某个kv的服务器崩掉之后，需要重新执行一下之前apply的操作。
-	d.Decode(&rf.LogAppendNum)
+	//d.Decode(&rf.LogAppendNum)
 
 	// Example:
 	// r := bytes.NewBuffer(data)
@@ -304,7 +333,9 @@ func (rf *Raft) StartSnapshot(snapshot []byte, index int) {
 
 	var newLog []Entry
 
-	for i:=index;i<=lastIndex;i++{
+	newLog = append(newLog, Entry{Index:index, Term:rf.Logs[index-baseIndex].Term})
+
+	for i:=index+1;i<=lastIndex;i++{
 		newLog = append(newLog, rf.Logs[i-baseIndex])
 	}
 
@@ -324,7 +355,7 @@ func (rf *Raft) StartSnapshot(snapshot []byte, index int) {
 func truncateLog(lastIncludedIndex int, lastIncludedTerm int, log []Entry) []Entry{
 
 	var newLogEntries []Entry
-	newLogEntries = append(newLogEntries, Entry{Index:lastIncludedIndex, Term:lastIncludedIndex}) //第0项，而我们是从第1项开始计数的
+	newLogEntries = append(newLogEntries, Entry{Index:lastIncludedIndex, Term:lastIncludedTerm}) //第0项，而我们是从第1项开始计数的
 
 	for index:=len(log)-1;index>=0;index--{
 		if log[index].Index == lastIncludedIndex && log[index].Term==lastIncludedTerm { //如果没有这么新的日志项的话，最后返回的就是一个空的log(第0项还是有值的)
@@ -361,9 +392,14 @@ func (rf *Raft) InstallSnapshot(args InstallSnapshotArgs, reply *InstallSnapshot
 
 	rf.persist()
 
+	if(DEBUG){
+		fmt.Printf("server [%d]: InstallSnapshot\n", rf.me)
+	}
+
+	rf.PrintLogFront(PRINTLOGNUM, DEBUG)
+
 	rf.applyCh<-msg
 }
-
 
 // 当follower的matchindex太小的时候，leader就会给它发送一个sendInstallSnapshot的消息
 func (rf *Raft) sendInstallSnapshot(server int, args InstallSnapshotArgs, reply *InstallSnapshotsReply) bool {
@@ -407,15 +443,15 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		isLeader = false
 		return index, term, isLeader
 	}
-	appendEntry:=Entry{rf.CurrentTerm, len(rf.Logs), command }
+	appendEntry:=Entry{rf.CurrentTerm, rf.Logs[len(rf.Logs)-1].Index+1, command }
 
 	rf.Logs = append(rf.Logs, appendEntry)
 	rf.LogAppendNum[len(rf.Logs)-1] = 1 //初始化为1
 
 	rf.persist()
-	printLogFront(rf, PRINTLOGNUM, DEBUG)
+	rf.PrintLogFront(PRINTLOGNUM, DEBUG)
 
-	return len(rf.Logs)-1, rf.CurrentTerm, isLeader
+	return rf.Logs[len(rf.Logs)-1].Index, rf.CurrentTerm, isLeader
 }
 
 //
@@ -477,16 +513,23 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 	baseIndex := rf.Logs[0].Index
 
+	//if (len(rf.Logs)==1) {
+	//	reply.NextIndex = rf.Logs[0].Index+1
+	//	reply.Success = false
+	//
+	//	//return
+	//}
+
 	if (args.PrevLogIndex > rf.Logs[len(rf.Logs)-1].Index) {
 		//index不存在
 		reply.NextIndex = rf.Logs[len(rf.Logs)-1].Index
 		reply.Success = false
 
 		return
-	} else if(rf.Logs[args.PrevLogIndex].Term!=args.PrevLogTerm){
+	} else if(rf.Logs[args.PrevLogIndex-baseIndex].Term!=args.PrevLogTerm){
 		//或者 index存在 但term不相等
 
-		termTemp:=rf.Logs[args.PrevLogIndex].Term
+		termTemp:=rf.Logs[args.PrevLogIndex-baseIndex].Term
 
 		for i := args.PrevLogIndex - 1 ; i >= baseIndex; i-- {
 			if (i==baseIndex) {
@@ -507,13 +550,17 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		if(len(args.Entries)>0) {
 			firstInd:=args.Entries[0].Index
 
-			if (len(rf.Logs)-1>=firstInd) { //覆盖
-				rf.Logs = append(rf.Logs[:firstInd], args.Entries...)
+			if (rf.Logs[len(rf.Logs)-1].Index>=firstInd) { //覆盖 todo
+
+				if (firstInd-baseIndex<0 || firstInd-baseIndex> len(rf.Logs)-1) {
+					fmt.Println(firstInd-baseIndex)
+				}
+				rf.Logs = append(rf.Logs[:firstInd-baseIndex], args.Entries...)
 			} else { //添加
 				rf.Logs = append(rf.Logs, args.Entries...)
 			}
 			rf.persist()
-			printLogFront(rf, PRINTLOGNUM, DEBUG)
+			rf.PrintLogFront(PRINTLOGNUM, DEBUG)
 		}
 		reply.Success = true
 	}
@@ -570,9 +617,6 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 			//更新一下CommitIndex结束
 		}
 	} else {
-		if(reply.NextIndex==0){
-			fmt.Println("Fuck")
-		}
 
 		rf.nextIndex[server] = reply.NextIndex
 	}
@@ -589,6 +633,10 @@ func broadcastAppendEntries(rf *Raft) {
 		if (i!=rf.me && rf.status==LEADER) {
 
 			if (rf.nextIndex[i]>baseIndex) { //appendEntries
+
+				if (rf.nextIndex[i]-1-baseIndex<0||rf.nextIndex[i]-1-baseIndex> len(rf.Logs)-1) {
+					fmt.Println(rf.nextIndex[i]-1-baseIndex)
+				}
 
 				prevLog:=rf.Logs[rf.nextIndex[i]-1-baseIndex] //!!!
 				lastLog:=rf.Logs[len(rf.Logs)-1]
@@ -717,7 +765,9 @@ func printLogEnd(rf *Raft, num int, debug bool) {
 	fmt.Println()
 }
 
-func printLogFront(rf *Raft, num int, debug bool) {
+func (rf *Raft) PrintLogFront(num int, debug bool) {
+
+
 	if (debug!=true){
 		return
 	}
@@ -731,12 +781,19 @@ func printLogFront(rf *Raft, num int, debug bool) {
 		endIndex = len(rf.Logs)-1
 	}
 
-	for i:=0;i<=endIndex;i++ {
+//	for i:=0;i<=endIndex;i++ {
+	for i:=0;i<=len(rf.Logs)-1;i++ {
+
+		if (i<0 || i> len(rf.Logs)-1) {
+			fmt.Printf("i=%d  endIndex=%d  len(rf.Logs)=%d\n", i, endIndex, len(rf.Logs))
+		}
+
 		fmt.Printf("i:%d t:%d c:%v -> ", rf.Logs[i].Index, rf.Logs[i].Term, rf.Logs[i].Command)
 	}
 
 	fmt.Println()
 }
+
 
 //
 // the service or tester wants to create a Raft server. the ports
@@ -778,8 +835,9 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
+	rf.readSnapshot(persister.ReadSnapshot())
 
-	printLogFront(rf, PRINTLOGNUM, DEBUG)
+	rf.PrintLogFront(PRINTLOGNUM, DEBUG)
 
 	go func(rf *Raft){ //Make() must return quickly, so it should start goroutines for any long-running work.
 		for{
@@ -854,12 +912,20 @@ func Make(peers []*labrpc.ClientEnd, me int,
 					//rf.CommitTerm = rf.Logs[i].Term
 
 					if(DEBUG){
-						fmt.Printf("from [%d] : CommitIndex: %d\n", rf.me, i)
+						fmt.Printf("from [%d] : CommitIndex: %d  \n", rf.me, i)
+					}
+
+					if (i-baseIndex<0||i-baseIndex> len(rf.Logs)-1) {
+						fmt.Println("Fuck")
 					}
 
 					sendApplyMsg:=ApplyMsg{i, rf.Logs[i-baseIndex].Command, false, []byte{}}
 					rf.applyCh <- sendApplyMsg
 					rf.LastApplied = i
+
+					if(DEBUG){
+						fmt.Printf("from [%d] : CommitIndex: %d  Command: %v\n", rf.me, i, sendApplyMsg.Command)
+					}
 
 					rf.persist()
 				}

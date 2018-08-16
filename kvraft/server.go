@@ -66,6 +66,8 @@ func (kv *RaftKV) AppendEntryToLog(entry Op) bool {
 	case op:=<-ch: // 接收到entry
 		return op==entry //检查一下apply的是否和发送的请求里面的entry相同
 	case <-time.After(1000*time.Millisecond): //超时了
+		kv.rf.PrintLogFront(raft.PRINTLOGNUM, raft.DEBUG)
+		//fmt.Printf("index:%d  entry:%v的日志项 无法在限定时间内达成一致，超时了\n", index, entry)
 		return false
 	}
 }
@@ -223,3 +225,4 @@ func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persiste
 
 	return kv
 }
+

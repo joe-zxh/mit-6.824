@@ -422,6 +422,7 @@ func TestSnapshotRPC(t *testing.T) {
 	{
 		ck1 := cfg.makeClient([]int{0, 1})
 		for i := 0; i < 50; i++ {
+			//fmt.Printf("现在是i=%d\n",i)
 			ck1.Put(strconv.Itoa(i), strconv.Itoa(i))
 		}
 		time.Sleep(electionTimeout)
