@@ -7,6 +7,7 @@ import (
 	"raft"
 	"sync"
 	"time"
+	"bytes"
 )
 
 const Debug = 0
@@ -173,22 +174,47 @@ func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persiste
 		for{
 			msg := <-kv.applyCh
 
+			if msg.UseSnapshot { // 使用snapshot里面的数据
+				var LastIncludedIndex int
+				var LastIncludedTerm int
 
-			op:=msg.Command.(Op)
+				r:=bytes.NewReader(msg.Snapshot)
+				d:=gob.NewDecoder(r)
 
-			kv.mu.Lock()
+				kv.mu.Lock()
+				d.Decode(&LastIncludedIndex)
+				d.Decode(&LastIncludedTerm)
+				kv.db = make(map[string]string)
+				kv.ack = make(map[int64] int)
+				d.Decode(&kv.db)
+				d.Decode(&kv.ack)
+				kv.mu.Unlock()
 
-			ch, ok := kv.result[msg.Index]
+			} else {
 
-			if (!kv.CheckDup(op.Id, op.ReqId)) { // 如果不是duplicated的，才apply它
-				kv.Apply(op)
+				op:=msg.Command.(Op)
+				kv.mu.Lock()
+				if (!kv.CheckDup(op.Id, op.ReqId)) { // 如果不是duplicated的，才apply它
+					kv.Apply(op)
+				}
+
+				ch, ok := kv.result[msg.Index]
+				if ok { // 这个是leader，且发出了那个index的command才会ok
+					ch <-op
+				}
+
+				// kvraft告诉raft，现在需要snapshot了
+				if maxraftstate != -1 && kv.rf.GetPersistSize() > maxraftstate {
+					w := new(bytes.Buffer)
+					e :=gob.NewEncoder(w)
+					e.Encode(kv.db)
+					e.Encode(kv.ack)
+					data := w.Bytes()
+					go kv.rf.StartSnapshot(data, msg.Index)
+				}
+
+				kv.mu.Unlock()
 			}
-
-			if ok { // 这个是leader，且发出了那个index的command才会ok
-				ch <-op
-			}
-
-			kv.mu.Unlock()
 
 		}
 

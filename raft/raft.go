@@ -131,7 +131,7 @@ func (rf *Raft) persist() {
 	e.Encode(rf.Logs)
 	e.Encode(rf.CommitIndex)
 	e.Encode(rf.CommitTerm)
-	e.Encode(rf.LastApplied)
+	//e.Encode(rf.LastApplied)
 	e.Encode(rf.LogAppendNum)
 	data := w.Bytes()
 	rf.persister.SaveRaftState(data)
@@ -157,7 +157,7 @@ func (rf *Raft) readPersist(data []byte) {
 	d.Decode(&rf.Logs)
 	d.Decode(&rf.CommitIndex)
 	d.Decode(&rf.CommitTerm)
-	//d.Decode(&rf.LastApplied)
+	//d.Decode(&rf.LastApplied)//这个量不需要 持久化，因为某个kv的服务器崩掉之后，需要重新执行一下之前apply的操作。
 	d.Decode(&rf.LogAppendNum)
 
 	// Example:
@@ -270,6 +270,43 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 	return ok
 }
 
+
+
+func (rf *Raft) GetPersistSize() int {
+	return rf.persister.RaftStateSize()
+}
+
+// kv服务器让raft做一个snapshot。 参数snapshot是kv服务器需要保存的内容
+func (rf *Raft) StartSnapshot(snapshot []byte, index int) {
+
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+
+	baseIndex := rf.Logs[0].Index
+	lastIndex := rf.Logs[len(rf.Logs)-1].Index
+
+	if index <= baseIndex || index > lastIndex { //如果在kv服务器发送这个StartSnapshot之前，leader可能先发送了installSnapshot过来，所以可能出现index<=baseIndex的情况
+		return
+	}
+
+	var newLog []Entry
+
+	for i:=index;i<=lastIndex;i++{
+		newLog = append(newLog, rf.Logs[i-baseIndex])
+	}
+
+	rf.Logs = newLog
+	rf.persist()
+
+	w:= new(bytes.Buffer)
+	e:=gob.NewEncoder(w)
+	e.Encode(newLog[0].Index) // Log是从1开始计数的，所以0是前一个日志项的索引
+	e.Encode(newLog[0].Term)
+
+	data := w.Bytes()
+	data = append(data, snapshot...)
+	rf.persister.SaveSnapshot(data)
+}
 
 //
 // the service using Raft (e.g. a k/v server) wants to start
@@ -712,17 +749,20 @@ func Make(peers []*labrpc.ClientEnd, me int,
 			select {
 			case <-rf.chanCommit:
 				rf.mu.Lock()
+			baseIndex := rf.Logs[0].Index
+
 				for i:=rf.LastApplied+1;i<=rf.CommitIndex;i++ {
 					//rf.CommitTerm = rf.Logs[i].Term
 
 					if(DEBUG){
 						fmt.Printf("from [%d] : CommitIndex: %d\n", rf.me, i)
 					}
-					rf.persist()
 
-					sendApplyMsg:=ApplyMsg{i, rf.Logs[i].Command, false, []byte{}}
+					sendApplyMsg:=ApplyMsg{i, rf.Logs[i-baseIndex].Command, false, []byte{}}
 					rf.applyCh <- sendApplyMsg
 					rf.LastApplied = i
+
+					rf.persist()
 				}
 				rf.mu.Unlock()
 			}
