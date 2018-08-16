@@ -92,7 +92,7 @@ type Raft struct { // 要保存的量 的首字母要 变成大写
 	voteReplyOkCount int // 收到有效回复的总数
 	voteReplyCount int // 收到回复的总数
 
-	LogAppendNum map[int]int // 已经append了这条索引为index的日志项的节点的个数
+	LogAppendNum map[int]int // 已经append了这条索引为index的日志项的节点的个数。这个可以删掉，没有用的。
 
 	applyCh chan ApplyMsg
 
@@ -270,7 +270,20 @@ func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *Request
 	return ok
 }
 
+type InstallSnapshotArgs struct {
+	//raft的数据
+	Term int
+	LeaderId int
+	LastIncludedIndex int
+	LastIncludedTerm int
 
+	//raftKV的数据
+	Data []byte
+}
+
+type InstallSnapshotsReply struct {
+	Term int
+}
 
 func (rf *Raft) GetPersistSize() int {
 	return rf.persister.RaftStateSize()
@@ -306,6 +319,68 @@ func (rf *Raft) StartSnapshot(snapshot []byte, index int) {
 	data := w.Bytes()
 	data = append(data, snapshot...)
 	rf.persister.SaveSnapshot(data)
+}
+
+func truncateLog(lastIncludedIndex int, lastIncludedTerm int, log []Entry) []Entry{
+
+	var newLogEntries []Entry
+	newLogEntries = append(newLogEntries, Entry{Index:lastIncludedIndex, Term:lastIncludedIndex}) //第0项，而我们是从第1项开始计数的
+
+	for index:=len(log)-1;index>=0;index--{
+		if log[index].Index == lastIncludedIndex && log[index].Term==lastIncludedTerm { //如果没有这么新的日志项的话，最后返回的就是一个空的log(第0项还是有值的)
+			newLogEntries = append(newLogEntries, log[index+1:]...)
+			break
+		}
+	}
+
+	return newLogEntries
+}
+
+func (rf *Raft) InstallSnapshot(args InstallSnapshotArgs, reply *InstallSnapshotsReply) {
+
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+
+	if args.Term < rf.CurrentTerm { //leader的term比当前的小
+		reply.Term = rf.CurrentTerm
+		return
+	}
+
+	rf.getHeartBeat<-true
+	rf.status = FOLLOWER
+	rf.CurrentTerm = args.Term
+
+	rf.persister.SaveSnapshot(args.Data)
+
+	rf.Logs = truncateLog(args.LastIncludedIndex, args.LastIncludedTerm, rf.Logs)
+
+	msg := ApplyMsg{UseSnapshot:true, Snapshot:args.Data} //用来告诉RaftKV 更改它的db和ack的数据
+
+	rf.LastApplied = args.LastIncludedIndex
+	rf.CommitIndex = args.LastIncludedIndex
+
+	rf.persist()
+
+	rf.applyCh<-msg
+}
+
+
+// 当follower的matchindex太小的时候，leader就会给它发送一个sendInstallSnapshot的消息
+func (rf *Raft) sendInstallSnapshot(server int, args InstallSnapshotArgs, reply *InstallSnapshotsReply) bool {
+	ok := rf.peers[server].Call("Raft.InstallSnapshot", args, reply)
+
+	if ok {
+		if reply.Term > rf.CurrentTerm {
+			rf.CurrentTerm = reply.Term
+			rf.status = FOLLOWER
+			rf.VotedFor = -1
+			return ok
+		}
+		rf.nextIndex[server] = args.LastIncludedIndex+1
+		rf.matchIndex[server] = args.LastIncludedIndex
+	}
+
+	return ok
 }
 
 //
@@ -400,9 +475,11 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		return
 	}
 
-	if (args.PrevLogIndex > len(rf.Logs)-1) {
+	baseIndex := rf.Logs[0].Index
+
+	if (args.PrevLogIndex > rf.Logs[len(rf.Logs)-1].Index) {
 		//index不存在
-		reply.NextIndex = len(rf.Logs)
+		reply.NextIndex = rf.Logs[len(rf.Logs)-1].Index
 		reply.Success = false
 
 		return
@@ -411,9 +488,9 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 
 		termTemp:=rf.Logs[args.PrevLogIndex].Term
 
-		for i := args.PrevLogIndex - 1 ; i >= 0; i-- {
-			if (i==0) {
-				reply.NextIndex = 1
+		for i := args.PrevLogIndex - 1 ; i >= baseIndex; i-- {
+			if (i==baseIndex) {
+				reply.NextIndex = baseIndex+1 //!!!
 				break
 			}
 
@@ -461,6 +538,8 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 		return false
 	}
 
+	baseIndex := rf.Logs[0].Index
+
 	if (reply.Success) {
 		if (!args.HeartBeat&& len(args.Entries)>0) { //不是心跳
 			rf.matchIndex[server] = args.Entries[len(args.Entries)-1].Index
@@ -480,7 +559,7 @@ func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *App
 					}
 				}
 
-				if (2*num>len(rf.peers)&&rf.CommitIndex<ind&&rf.Logs[ind].Term==rf.CurrentTerm) {
+				if (2*num>len(rf.peers)&&rf.CommitIndex<ind&&rf.Logs[ind-baseIndex].Term==rf.CurrentTerm) {
 					rf.CommitIndex = ind
 					rf.chanCommit<-true
 					break;
@@ -504,29 +583,49 @@ func broadcastAppendEntries(rf *Raft) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
+	baseIndex := rf.Logs[0].Index
+
 	for i:=range(rf.peers) {
 		if (i!=rf.me && rf.status==LEADER) {
-			prevLog:=rf.Logs[rf.nextIndex[i]-1] //!!!
-			lastLog:=rf.Logs[len(rf.Logs)-1]
 
-			entriesSend:=[]Entry{}
+			if (rf.nextIndex[i]>baseIndex) { //appendEntries
 
-			hb:=false
+				prevLog:=rf.Logs[rf.nextIndex[i]-1-baseIndex] //!!!
+				lastLog:=rf.Logs[len(rf.Logs)-1]
 
-			if (lastLog.Index>=rf.nextIndex[i]-1) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
-				entriesSend=rf.Logs[rf.nextIndex[i]:]
-				hb=false
-			} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
-				hb=true
+				entriesSend:=[]Entry{}
+
+				hb:=false
+
+				if (lastLog.Index>=rf.nextIndex[i]-1) { //rf.matchIndex[i]!=lastLog.Index是用来判断，follower的日志是和leader的完全一样 还是 只是index一样
+					entriesSend=rf.Logs[rf.nextIndex[i]-baseIndex:]
+					hb=false
+				} else { //follower节点的日志长度和leader的一样的时候, 发送一条空的entry表示heartbeat
+					hb=true
+				}
+
+				args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entriesSend, hb, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
+
+				reply:=AppendEntriesReply{}
+
+				go func(server int) {
+					rf.sendAppendEntries(server, args, &reply)
+				}(i)
+
+
+			} else { //sendInstallSnapshot
+				var args InstallSnapshotArgs
+				args.Term = rf.CurrentTerm
+				args.LeaderId = rf.me
+				args.LastIncludedIndex = rf.Logs[0].Index
+				args.LastIncludedTerm = rf.Logs[0].Term
+				args.Data = rf.persister.snapshot
+				go func(server int, args InstallSnapshotArgs){
+					reply:=&InstallSnapshotsReply{}
+					rf.sendInstallSnapshot(server, args, reply)
+				}(i, args)
+
 			}
-
-			args:=AppendEntriesArgs{rf.CurrentTerm, rf.me, prevLog.Index, prevLog.Term, entriesSend, hb, rf.CommitIndex, rf.CommitTerm, rf.matchIndex[i]}
-
-			reply:=AppendEntriesReply{}
-
-			go func(server int) {
-				rf.sendAppendEntries(server, args, &reply)
-			}(i)
 		}
 	}
 }
