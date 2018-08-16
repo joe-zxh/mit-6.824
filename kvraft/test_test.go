@@ -13,7 +13,6 @@ import "sync/atomic"
 // (much more than the paper's range of timeouts).
 const electionTimeout = 1 * time.Second
 
-// 检查对应key的value是否正确。
 func check(t *testing.T, ck *Clerk, key string, value string) {
 	v := ck.Get(key)
 	if v != value {
@@ -21,7 +20,7 @@ func check(t *testing.T, ck *Clerk, key string, value string) {
 	}
 }
 
-// a client runs the function f and then signals when it is done 通过一个clerk来运行一个函数，并在运行完后，返回ok
+// a client runs the function f and then signals it is done
 func run_client(t *testing.T, cfg *config, me int, ca chan bool, fn func(me int, ck *Clerk, t *testing.T)) {
 	ok := false
 	defer func() { ca <- ok }()
@@ -31,7 +30,7 @@ func run_client(t *testing.T, cfg *config, me int, ca chan bool, fn func(me int,
 	cfg.deleteClient(ck)
 }
 
-// spawn(产生大量) ncli clients and wait until they are all done 产生大量的clerk来运行一个函数，只要有一个clerk运行失败，那么返回false. ncli是client的个数
+// spawn ncli clients and wait until they are all done
 func spawn_clients_and_wait(t *testing.T, cfg *config, ncli int, fn func(me int, ck *Clerk, t *testing.T)) {
 	ca := make([]chan bool, ncli)
 	for cli := 0; cli < ncli; cli++ {
@@ -53,30 +52,30 @@ func NextValue(prev string, val string) string {
 	return prev + val
 }
 
-// check that for a specific client all known appends are present in a value, and in order
-// 检查一个client添加的value是否正确。(存在、pattern唯一、且次序正确，才算正确)
+// check that for a specific client all known appends are present in a value,
+// and in order
 func checkClntAppends(t *testing.T, clnt int, v string, count int) {
 	lastoff := -1
 	for j := 0; j < count; j++ {
 		wanted := "x " + strconv.Itoa(clnt) + " " + strconv.Itoa(j) + " y"
 		off := strings.Index(v, wanted)
-		if off < 0 { // 找不到对应的pattern
+		if off < 0 {
 			t.Fatalf("%v missing element %v in Append result %v", clnt, wanted, v)
 		}
-		off1 := strings.LastIndex(v, wanted) //检查在value中有且仅有一个这样的pattern(字符串里面的"j"保证了唯一性)
-		if off1 != off { //出现多个pattern
+		off1 := strings.LastIndex(v, wanted)
+		if off1 != off {
 			fmt.Printf("off1 %v off %v\n", off1, off)
 			t.Fatalf("duplicate element %v in Append result", wanted)
 		}
-		if off <= lastoff { // 次序错了
+		if off <= lastoff {
 			t.Fatalf("wrong order for element %v in Append result", wanted)
 		}
 		lastoff = off
 	}
 }
 
-// check that all known appends are present in a value, and are in order for each concurrent client.
-// 和checkClntAppends类似，只不过，这里 对每一个client都检查 append的正确性。
+// check that all known appends are present in a value,
+// and are in order for each concurrent client.
 func checkConcurrentAppends(t *testing.T, v string, counts []int) {
 	nclients := len(counts)
 	for i := 0; i < nclients; i++ {
@@ -102,7 +101,7 @@ func checkConcurrentAppends(t *testing.T, v string, counts []int) {
 // repartition the servers periodically
 func partitioner(t *testing.T, cfg *config, ch chan bool, done *int32) {
 	defer func() { ch <- true }()
-	for atomic.LoadInt32(done) == 0 { // 原子操作，其他goroutine不会对done进行读或写的操作。
+	for atomic.LoadInt32(done) == 0 {
 		a := make([]int, cfg.n)
 		for i := 0; i < cfg.n; i++ {
 			a[i] = (rand.Int() % 2)
@@ -121,11 +120,14 @@ func partitioner(t *testing.T, cfg *config, ch chan bool, done *int32) {
 	}
 }
 
-// Basic test is as follows: one or more clients submitting Append/Get operations to set of servers for some period of time. 一个或多个客户端向一些服务器提交append/get操作。
-// After the period is over, test checks that all appended values are present and in order  for a particular key. 然后，对特定的key，检查它的value的正确性。
-// If unreliable is set, RPCs may fail.  If crash is set, the servers crash after the period is over and restart. 参数unreliabled会让RPC断掉。crash会让服务器断掉。
-// If partitions is set, the test repartitions the network concurrently with the clients and servers. partition会在一段时间后让网络重新分组。
-// If maxraftstate is a positive number, the size of the state for Raft (i.e., log size) shouldn't exceed 2*maxraftstate. 2*maxraftstate是最大的log的长度。
+// Basic test is as follows: one or more clients submitting Append/Get
+// operations to set of servers for some period of time.  After the period is
+// over, test checks that all appended values are present and in order for a
+// particular key.  If unreliable is set, RPCs may fail.  If crash is set, the
+// servers crash after the period is over and restart.  If partitions is set,
+// the test repartitions the network concurrently with the clients and servers. If
+// maxraftstate is a positive number, the size of the state for Raft (i.e., log
+// size) shouldn't exceed 2*maxraftstate.
 func GenericTest(t *testing.T, tag string, nclients int, unreliable bool, crash bool, partitions bool, maxraftstate int) {
 	const nservers = 5
 	cfg := make_config(t, tag, nservers, unreliable, maxraftstate)
@@ -133,10 +135,10 @@ func GenericTest(t *testing.T, tag string, nclients int, unreliable bool, crash 
 
 	ck := cfg.makeClient(cfg.All())
 
-	done_partitioner := int32(0) // 用来标志是否 停止重新分组。
-	done_clients := int32(0) // 用来标志client是否进行操作(0表示继续操作，1表示停止操作。5s后设为1)
-	ch_partitioner := make(chan bool) // 这个用来标志partition分组是否完成了
-	clnts := make([]chan int, nclients) // 这个用来记录client在这段时间内一共做了多少次append操作的。如果<10个会有一个警告的提示
+	done_partitioner := int32(0)
+	done_clients := int32(0)
+	ch_partitioner := make(chan bool)
+	clnts := make([]chan int, nclients)
 	for i := 0; i < nclients; i++ {
 		clnts[i] = make(chan int)
 	}
@@ -150,16 +152,16 @@ func GenericTest(t *testing.T, tag string, nclients int, unreliable bool, crash 
 				clnts[cli] <- j
 			}()
 			last := ""
-			key := strconv.Itoa(cli) // key就是对应的服务器的index值。
+			key := strconv.Itoa(cli)
 			myck.Put(key, last)
 			for atomic.LoadInt32(&done_clients) == 0 {
-				if (rand.Int() % 1000) < 500 { //一半的时间进行append操作
+				if (rand.Int() % 1000) < 500 {
 					nv := "x " + strconv.Itoa(cli) + " " + strconv.Itoa(j) + " y"
 					// log.Printf("%d: client new append %v\n", cli, nv)
 					myck.Append(key, nv)
 					last = NextValue(last, nv)
 					j++
-				} else { //一半的时间进行get操作，检查是否append成功
+				} else {
 					// log.Printf("%d: client new get %v\n", cli, key)
 					v := myck.Get(key)
 					if v != last {
@@ -208,7 +210,7 @@ func GenericTest(t *testing.T, tag string, nclients int, unreliable bool, crash 
 		}
 
 		// log.Printf("wait for clients\n")
-		for i := 0; i < nclients; i++ { //检查client的操作结果是否正确
+		for i := 0; i < nclients; i++ {
 			// log.Printf("read from clients %d\n", i)
 			j := <-clnts[i]
 			if j < 10 {
@@ -232,28 +234,26 @@ func GenericTest(t *testing.T, tag string, nclients int, unreliable bool, crash 
 	fmt.Printf("  ... Passed\n")
 }
 
-func TestJoe(t *testing.T) {
-	fmt.Println(randstring(5))
-	fmt.Println(randstring(5))
-	fmt.Println(randstring(5))
-}
-
 func TestBasic(t *testing.T) {
+	//return
 	fmt.Printf("Test: One client ...\n")
 	GenericTest(t, "basic", 1, false, false, false, -1)
 }
 
 func TestConcurrent(t *testing.T) {
+	//return
 	fmt.Printf("Test: concurrent clients ...\n")
 	GenericTest(t, "concur", 5, false, false, false, -1)
 }
 
 func TestUnreliable(t *testing.T) {
+	//return
 	fmt.Printf("Test: unreliable ...\n")
 	GenericTest(t, "unreliable", 5, true, false, false, -1)
 }
 
 func TestUnreliableOneKey(t *testing.T) {
+	//return
 	const nservers = 3
 	cfg := make_config(t, "onekey", nservers, true, -1)
 	defer cfg.cleanup()
@@ -289,6 +289,7 @@ func TestUnreliableOneKey(t *testing.T) {
 // doesn't go through until the partition heals.  The leader in the original
 // network ends up in the minority partition.
 func TestOnePartition(t *testing.T) {
+	//return
 	const nservers = 5
 	cfg := make_config(t, "partition", nservers, false, -1)
 	defer cfg.cleanup()
@@ -364,36 +365,43 @@ func TestOnePartition(t *testing.T) {
 }
 
 func TestManyPartitionsOneClient(t *testing.T) {
+	//return
 	fmt.Printf("Test: many partitions ...\n")
 	GenericTest(t, "manypartitions", 1, false, false, true, -1)
 }
 
 func TestManyPartitionsManyClients(t *testing.T) {
+	//return
 	fmt.Printf("Test: many partitions, many clients ...\n")
 	GenericTest(t, "manypartitionsclnts", 5, false, false, true, -1)
 }
 
 func TestPersistOneClient(t *testing.T) {
+	//return
 	fmt.Printf("Test: persistence with one client ...\n")
 	GenericTest(t, "persistone", 1, false, true, false, -1)
 }
 
 func TestPersistConcurrent(t *testing.T) {
+	//return
 	fmt.Printf("Test: persistence with concurrent clients ...\n")
 	GenericTest(t, "persistconcur", 5, false, true, false, -1)
 }
 
 func TestPersistConcurrentUnreliable(t *testing.T) {
+	//	return
 	fmt.Printf("Test: persistence with concurrent clients, unreliable ...\n")
 	GenericTest(t, "persistconcurunreliable", 5, true, true, false, -1)
 }
 
 func TestPersistPartition(t *testing.T) {
+	//	return
 	fmt.Printf("Test: persistence with concurrent clients and repartitioning servers...\n")
 	GenericTest(t, "persistpart", 5, false, true, true, -1)
 }
 
 func TestPersistPartitionUnreliable(t *testing.T) {
+	//	return
 	fmt.Printf("Test: persistence with concurrent clients and repartitioning servers, unreliable...\n")
 	GenericTest(t, "persistpartunreliable", 5, true, true, true, -1)
 }
@@ -405,6 +413,7 @@ func TestPersistPartitionUnreliable(t *testing.T) {
 // even if minority doesn't respond.
 //
 func TestSnapshotRPC(t *testing.T) {
+	//return
 	const nservers = 3
 	maxraftstate := 1000
 	cfg := make_config(t, "snapshotrpc", nservers, false, maxraftstate)
@@ -459,21 +468,25 @@ func TestSnapshotRPC(t *testing.T) {
 }
 
 func TestSnapshotRecover(t *testing.T) {
+	//	return
 	fmt.Printf("Test: persistence with one client and snapshots ...\n")
 	GenericTest(t, "snapshot", 1, false, true, false, 1000)
 }
 
 func TestSnapshotRecoverManyClients(t *testing.T) {
+	//	return
 	fmt.Printf("Test: persistence with several clients and snapshots ...\n")
 	GenericTest(t, "snapshotunreliable", 20, false, true, false, 1000)
 }
 
 func TestSnapshotUnreliable(t *testing.T) {
+	//	return
 	fmt.Printf("Test: persistence with several clients, snapshots, unreliable ...\n")
 	GenericTest(t, "snapshotunreliable", 5, true, false, false, 1000)
 }
 
 func TestSnapshotUnreliableRecover(t *testing.T) {
+	//return
 	fmt.Printf("Test: persistence with several clients, failures, and snapshots, unreliable ...\n")
 	GenericTest(t, "snapshotunreliablecrash", 5, true, true, false, 1000)
 }
