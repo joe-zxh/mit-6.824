@@ -151,7 +151,7 @@ func TestJoe(t *testing.T) {
 
 	for i:=0;i<128;i++ {
 		wg.Add(1)
-		fmt.Println(wg.GetCounter())
+		//fmt.Println(wg.GetCounter())
 	}
 }
 
