@@ -1,4 +1,2 @@
 
-lab1 mapreduce实验 完成
-
-lab2 raft实验 完成
+MIT6.824课程实验：基于Raft共识算法实现一个分布式的KV数据库
